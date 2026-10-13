@@ -3,6 +3,7 @@ import "./globals.css";
 import SmoothScroll from "@/components/main/Smoothscroll";
 import Navbar from "@/components/main/Navbar";
 import Footer from "@/components/main/Footer";
+import ReduxProvider from "./ReduxProvider";
 
 const bebasNeue = Bebas_Neue({
   variable: "--font-bebas-neue",
@@ -35,11 +36,13 @@ export default function RootLayout({ children }) {
       className={`${bebasNeue.variable} ${geistSans.variable} ${inter.variable}`}
     >
       <body className="min-h-screen flex flex-col">
-        <SmoothScroll>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </SmoothScroll>
+        <ReduxProvider>
+          <SmoothScroll>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </SmoothScroll>
+        </ReduxProvider>
       </body>
     </html>
   );
