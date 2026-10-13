@@ -1,11 +1,11 @@
 import React from 'react'
 import Products from './Products'
-import VideoTestimonials from "@/components/home/VideoTestimonials";
+import Review from "@/components/ourproducts/ReviewTestimonials";
 export default function page() {
     return (
         <>
         <Products />
-        <VideoTestimonials /> 
+        <Review /> 
         </>
     )
 }
