@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -36,13 +37,65 @@ const BRAND = {
     dark: "#24202B",
 };
 
+// ============================================================
+// ANNOUNCEMENT MARQUEE
+// ============================================================
+
+const ANNOUNCEMENTS = [
+    "COMPLIMENTARY SHIPPING ON ORDERS OVER ₹2,000",
+    "DERMATOLOGICALLY TESTED",
+    "SULPHATE & PARABEN FREE",
+    "CRUELTY-FREE BEAUTY",
+    "YOUR BEAUTY, YOUR RITUAL",
+];
+
+function AnnouncementMarquee() {
+    return (
+        <div
+            className="solvestic-marquee w-full overflow-hidden whitespace-nowrap"
+            aria-label={ANNOUNCEMENTS.join(". ")}
+        >
+            <div className="solvestic-marquee-track flex w-max">
+                {[0, 1].map((group) => (
+                    <div
+                        key={group}
+                        className="flex shrink-0 items-center"
+                        aria-hidden={group === 1 ? "true" : undefined}
+                    >
+                        {ANNOUNCEMENTS.map((item, index) => (
+                            <React.Fragment key={`${group}-${index}`}>
+                                <span className="px-5 text-[9px] font-medium tracking-[0.16em] sm:px-7 sm:text-[10px]">
+                                    {item}
+                                </span>
+
+                                <span
+                                    className="text-white/60"
+                                    aria-hidden="true"
+                                >
+                                    ✦
+                                </span>
+                            </React.Fragment>
+                        ))}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ============================================================
+// NAVBAR
+// ============================================================
+
 export default function Navbar() {
     const pathname = usePathname();
     const router = useRouter();
+
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+
     const searchInputRef = useRef(null);
     const { scrollY } = useScroll();
 
@@ -50,11 +103,13 @@ export default function Navbar() {
         setScrolled(latest > 20);
     });
 
+    // Close open menus when navigating to another page.
     useEffect(() => {
         setSearchOpen(false);
         setMobileMenuOpen(false);
     }, [pathname]);
 
+    // Automatically focus the search field when opened.
     useEffect(() => {
         if (!searchOpen) return;
 
@@ -65,6 +120,7 @@ export default function Navbar() {
         return () => window.clearTimeout(timer);
     }, [searchOpen]);
 
+    // Keyboard shortcuts.
     useEffect(() => {
         const handleKeyDown = (event) => {
             if (event.key === "Escape") {
@@ -73,6 +129,7 @@ export default function Navbar() {
             }
 
             const activeTag = document.activeElement?.tagName;
+
             const isTyping =
                 ["INPUT", "TEXTAREA", "SELECT"].includes(activeTag) ||
                 document.activeElement?.isContentEditable;
@@ -86,11 +143,15 @@ export default function Navbar() {
 
         window.addEventListener("keydown", handleKeyDown);
 
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
     }, []);
 
+    // Hide the public navbar on admin routes.
     if (pathname.startsWith("/admin")) return null;
 
+    // Product search.
     const handleSearch = (event) => {
         event.preventDefault();
 
@@ -103,7 +164,8 @@ export default function Navbar() {
 
         setSearchOpen(false);
         setMobileMenuOpen(false);
-        router.push(`/ search ? q = ${encodeURIComponent(query)} `);
+
+        router.push(`/search?q=${encodeURIComponent(query)}`);
     };
 
     const closeMenus = () => {
@@ -119,15 +181,50 @@ export default function Navbar() {
                 duration: 0.55,
                 ease: [0.22, 1, 0.36, 1],
             }}
-            className={`sticky top-0 z-50 bg-white text-[#24202B] transition-shadow duration-300 ${scrolled
-                ? "shadow-[0_8px_30px_rgba(36,32,43,0.09)]"
-                : ""
-                } `}
+            className={`sticky top-0 z-50 bg-white text-[#24202B] transition-shadow duration-300 ${
+                scrolled
+                    ? "shadow-[0_8px_30px_rgba(36,32,43,0.09)]"
+                    : ""
+            }`}
         >
-            {/* TOP BAR */}
+            <style>{`
+                .solvestic-marquee-track {
+                    animation: solvesticMarquee 32s linear infinite;
+                    will-change: transform;
+                }
+
+                .solvestic-marquee:hover .solvestic-marquee-track {
+                    animation-play-state: paused;
+                }
+
+                @keyframes solvesticMarquee {
+                    from {
+                        transform: translateX(0);
+                    }
+
+                    to {
+                        transform: translateX(-50%);
+                    }
+                }
+
+                @media (prefers-reduced-motion: reduce) {
+                    .solvestic-marquee-track {
+                        animation: none;
+                        will-change: auto;
+                    }
+                }
+            `}</style>
+
+            {/* ================================================== */}
+            {/* TOP BAR WITH MOVING ANNOUNCEMENTS */}
+            {/* ================================================== */}
+
             <div className="hidden border-b border-white/15 bg-[#7D45C2] text-white sm:block">
-                <div className="mx-auto flex h-10 max-w-[1600px] items-center justify-between px-6 lg:px-10">
-                    <div className="flex items-center gap-4">
+                <div className="mx-auto flex h-10 max-w-[1600px] items-center justify-between gap-5 px-6 lg:px-10">
+
+                    {/* LEFT: SOCIAL ICONS */}
+
+                    <div className="flex shrink-0 items-center gap-4">
                         <span className="mr-1 text-[9px] font-medium tracking-[0.2em] text-white/75">
                             FOLLOW OUR JOURNEY
                         </span>
@@ -155,13 +252,17 @@ export default function Navbar() {
                         </motion.a>
                     </div>
 
-                    <p className="text-center text-[9px] font-medium tracking-[0.16em] text-white/90">
-                        COMPLIMENTARY SHIPPING ON ORDERS OVER ₹2,000
-                    </p>
+                    {/* CENTER: SCROLLING ANNOUNCEMENTS */}
+
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                        <AnnouncementMarquee />
+                    </div>
+
+                    {/* RIGHT: HELP AND SUPPORT */}
 
                     <Link
                         href="/contact"
-                        className="flex items-center gap-2 text-[9px] font-medium tracking-[0.14em] text-white/85 transition-colors hover:text-[#F7F2FC]"
+                        className="flex shrink-0 items-center gap-2 text-[9px] font-medium tracking-[0.14em] text-white/85 transition-colors hover:text-[#F7F2FC]"
                     >
                         <Headphones size={13} />
                         HELP & SUPPORT
@@ -169,10 +270,15 @@ export default function Navbar() {
                 </div>
             </div>
 
+            {/* ================================================== */}
             {/* MAIN NAVBAR */}
+            {/* ================================================== */}
+
             <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
-                <div className="relative flex h-[76px] items-center justify-between gap-3 md:h-[92px] overflow-hidden">
+                <div className="relative flex h-[76px] items-center justify-between gap-3 overflow-hidden md:h-[92px]">
+
                     {/* MOBILE MENU BUTTON */}
+
                     <button
                         type="button"
                         onClick={() => {
@@ -204,6 +310,7 @@ export default function Navbar() {
                     </button>
 
                     {/* LOGO */}
+
                     <Link
                         href="/"
                         aria-label="Solvestic home"
@@ -221,6 +328,7 @@ export default function Navbar() {
                     </Link>
 
                     {/* DESKTOP NAVIGATION */}
+
                     <nav
                         aria-label="Main navigation"
                         className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-5 lg:flex xl:gap-10"
@@ -230,17 +338,18 @@ export default function Navbar() {
                                 category.href === "/our-products"
                                     ? pathname === "/our-products"
                                     : category.href === "/about-us"
-                                        ? pathname === "/about-us"
-                                        : false;
+                                      ? pathname === "/about-us"
+                                      : false;
 
                             return (
                                 <Link
                                     key={category.name}
                                     href={category.href}
-                                    className={`group relative whitespace - nowrap py - 3 text - [10px] font - semibold uppercase tracking - [0.12em] transition - colors xl: text - [11px] ${isActive
-                                        ? "text-[#7D45C2]"
-                                        : "text-[#24202B] hover:text-[#7D45C2]"
-                                        } `}
+                                    className={`group relative whitespace-nowrap py-3 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors xl:text-[11px] ${
+                                        isActive
+                                            ? "text-[#7D45C2]"
+                                            : "text-[#24202B] hover:text-[#7D45C2]"
+                                    }`}
                                 >
                                     {category.name}
 
@@ -259,8 +368,11 @@ export default function Navbar() {
                     </nav>
 
                     {/* ACTION ICONS */}
+
                     <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1.5 md:gap-2">
+
                         {/* SEARCH */}
+
                         <motion.button
                             type="button"
                             whileHover={{ y: -2 }}
@@ -271,13 +383,17 @@ export default function Navbar() {
                             }}
                             aria-label="Search products"
                             aria-expanded={searchOpen}
-                            className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors sm:h-11 sm:w-11 ${searchOpen
-                                ? "bg-[#F7F2FC] text-[#7D45C2]" : "hover:bg-[#F7F2FC] hover:text-[#7D45C2]"} `}
+                            className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors sm:h-11 sm:w-11 ${
+                                searchOpen
+                                    ? "bg-[#F7F2FC] text-[#7D45C2]"
+                                    : "hover:bg-[#F7F2FC] hover:text-[#7D45C2]"
+                            }`}
                         >
                             <Search size={20} strokeWidth={1.7} />
                         </motion.button>
 
                         {/* WISHLIST */}
+
                         <Link
                             href="/wishlist"
                             aria-label="Wishlist"
@@ -287,6 +403,7 @@ export default function Navbar() {
                         </Link>
 
                         {/* ACCOUNT */}
+
                         <Link
                             href="/account"
                             aria-label="My account"
@@ -296,12 +413,14 @@ export default function Navbar() {
                         </Link>
 
                         {/* CART */}
+
                         <Link
                             href="/cart"
                             aria-label="Shopping cart"
                             className="relative flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-[#F7F2FC] hover:text-[#7D45C2] sm:h-11 sm:w-11"
                         >
                             <ShoppingBag size={20} strokeWidth={1.7} />
+
                             <span className="absolute right-0.5 top-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#7D45C2] px-1 text-[9px] font-bold text-white ring-2 ring-white">
                                 0
                             </span>
@@ -310,7 +429,10 @@ export default function Navbar() {
                 </div>
             </div>
 
+            {/* ================================================== */}
             {/* MOBILE NAVIGATION */}
+            {/* ================================================== */}
+
             <AnimatePresence>
                 {mobileMenuOpen && (
                     <>
@@ -390,6 +512,7 @@ export default function Navbar() {
                                     <p className="text-[10px] font-semibold tracking-[0.15em] text-[#7D45C2]">
                                         A LITTLE SOMETHING SPECIAL
                                     </p>
+
                                     <p className="mt-1 text-xs text-[#24202B]/75">
                                         Complimentary shipping on orders over
                                         ₹2,000.
@@ -401,7 +524,10 @@ export default function Navbar() {
                 )}
             </AnimatePresence>
 
+            {/* ================================================== */}
             {/* SEARCH POPUP */}
+            {/* ================================================== */}
+
             <AnimatePresence>
                 {searchOpen && (
                     <>

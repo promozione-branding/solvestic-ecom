@@ -472,7 +472,7 @@ export default function OurPhilosophy() {
 
       <main>
         {/* Hero */}
-        <section className="relative grid min-h-[600px] grid-cols-1 mt-20 items-center gap-10 overflow-hidden bg-[#F0EBF9] px-5 py-14 sm:px-10 lg:min-h-[620px] lg:grid-cols-2 lg:gap-16 lg:px-[70px] lg:py-[60px]">
+        <section className="relative grid min-h-[600px] grid-cols-1 mt-20 items-center gap-10 overflow-hidden bg-[#fbfaf8] px-5 py-14 sm:px-10 lg:min-h-[620px] lg:grid-cols-2 lg:gap-16 lg:px-[70px] lg:py-[60px]">
           <div className="relative z-10 flex flex-col gap-6 lg:gap-7">
             <div className="sv-fade text-[10px] font-bold uppercase tracking-[.22em] text-[#4B4886] sm:text-[13px]">
               Our Philosophy
@@ -598,14 +598,14 @@ export default function OurPhilosophy() {
         </section>
 
         {/* Principles */}
-        <section className="bg-[#b1a2cf] px-5 py-6 text-white sm:px-10 sm:py-13">
+        <section className="bg-[#F7F2FC] px-5 py-6 text-ac4cd1 sm:px-10 sm:py-13">
           <div className="mb-5 md:mb-10 flex flex-col gap-5 lg:mb-14 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
             <h2 className="sv-h2 max-w-[640px] text-[30px] font-light leading-[1.1] sm:text-[42px] lg:text-[52px]">
               Three principles{" "}
-              <em className="text-[#fff]">behind every formula</em>
+              <em className="text-[#ac4cd1]">behind every formula</em>
             </h2>
 
-            <p className="max-w-[440px] text-[13px] leading-[1.6] text-[#fff] sm:text-[15px] lg:text-[17px]">
+            <p className="max-w-[440px] text-[13px] leading-[1.6] text-[#26244f] sm:text-[15px] lg:text-[17px]">
               We keep our approach simple, so what goes on your skin is only
               what works for it.
             </p>
@@ -685,12 +685,12 @@ export default function OurPhilosophy() {
         </section>
 
         {/* Equation */}
-        <section className="flex flex-col items-center gap-7 bg-[#b1a2cf] px-5 py-6 text-center sm:px-10 sm:py-13">
+        <section className="flex flex-col items-center gap-7 bg-[#fffaf7] px-5 py-6 text-center sm:px-10 sm:py-13">
           <div className="text-[10px] font-bold uppercase tracking-[.22em] text-[#ffff] sm:text-[13px]">
             Our formula for skincare
           </div>
 
-          <div className="sv-equation-line flex text-[#fff] flex-wrap items-center justify-center gap-2 text-[30px] font-light sm:gap-7 sm:text-[44px] lg:text-[54px]">
+          <div className="sv-equation-line flex text-[#ac4cd1] flex-wrap items-center justify-center gap-2 text-[30px] font-light sm:gap-7 sm:text-[44px] lg:text-[54px]">
             <span>Science</span>
             <span className="text-[.74em]">+</span>
             <span>Nature</span>
@@ -698,7 +698,7 @@ export default function OurPhilosophy() {
             <em>Solvestic</em>
           </div>
 
-          <p className="max-w-[820px] text-[#fff] text-sm md:leading-[1.7] sm:text-[18px]">
+          <p className="max-w-[820px] text-[#26244f] text-sm md:leading-[1.7] sm:text-[18px]">
             Lab-proven actives meet skin-loving botanicals. Every formula is
             developed with dermatologists and tested for safety and results
             before it reaches you.
