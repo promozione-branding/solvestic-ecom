@@ -301,7 +301,7 @@ export default function Footer() {
                                     { name: "Home", href: "/" },
                                     { name: "About Us", href: "/about-us" },
                                     { name: "Our Story", href: "/about#our-story" },
-                                    // { name: "Our Philosophy", href: "/our-philosophy" },
+                                    { name: "Our Philosophy", href: "/our-philosophy" },
                                 ].map((item, idx) => (
                                     <a
                                         key={idx}

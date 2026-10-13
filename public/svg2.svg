@@ -1,0 +1,77 @@
+<svg width="600" height="560" viewBox="0 0 600 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="600" height="560" rx="28" fill="#EEEFF8"/>
+
+  <!-- Soft decorative dots -->
+  <circle cx="92" cy="92" r="5" fill="#B6B8DB"/>
+  <circle cx="505" cy="112" r="4" fill="#b1a2cf"/>
+  <circle cx="470" cy="438" r="6" fill="#B6B8DB"/>
+  <circle cx="120" cy="448" r="4" fill="#b1a2cf"/>
+
+  <!-- Serum drop -->
+  <path d="M300 72C300 72 268 111 268 139C268 157 282 171 300 171C318 171 332 157 332 139C332 111 300 72 300 72Z" fill="#ad51c1"/>
+  <path d="M290 137C290 127 296 116 301 110" stroke="#B6B8DB" stroke-width="5" stroke-linecap="round" opacity=".75"/>
+
+  <!-- Direction / absorption lines -->
+  <path d="M274 184L248 230" stroke="#b1a2cf" stroke-width="2" stroke-dasharray="5 7"/>
+  <path d="M300 184V230" stroke="#b1a2cf" stroke-width="2" stroke-dasharray="5 7"/>
+  <path d="M326 184L352 230" stroke="#b1a2cf" stroke-width="2" stroke-dasharray="5 7"/>
+
+  <!-- Top skin surface -->
+  <path d="M76 242C125 224 170 232 213 242C260 253 303 251 346 241C397 229 448 225 524 242V287H76V242Z" fill="#FFFFFF"/>
+
+  <!-- Brick-like skin barrier -->
+  <g stroke="#B6B8DB" stroke-width="3">
+    <rect x="76" y="287" width="448" height="48" rx="9" fill="#D9DAEB"/>
+    <rect x="76" y="335" width="448" height="48" rx="9" fill="#C9CAE1"/>
+    <rect x="76" y="383" width="448" height="48" rx="9" fill="#B6B8DB"/>
+  </g>
+
+  <!-- Barrier cells -->
+  <g fill="#EEEFF8" stroke="#b1a2cf" stroke-width="3">
+    <rect x="98" y="296" width="76" height="30" rx="15"/>
+    <rect x="188" y="296" width="88" height="30" rx="15"/>
+    <rect x="290" y="296" width="78" height="30" rx="15"/>
+    <rect x="382" y="296" width="112" height="30" rx="15"/>
+
+    <rect x="112" y="344" width="91" height="30" rx="15"/>
+    <rect x="217" y="344" width="76" height="30" rx="15"/>
+    <rect x="307" y="344" width="102" height="30" rx="15"/>
+    <rect x="423" y="344" width="78" height="30" rx="15"/>
+
+    <rect x="94" y="392" width="100" height="30" rx="15"/>
+    <rect x="208" y="392" width="82" height="30" rx="15"/>
+    <rect x="304" y="392" width="94" height="30" rx="15"/>
+    <rect x="412" y="392" width="88" height="30" rx="15"/>
+  </g>
+
+  <!-- Moisture retained below barrier -->
+  <path d="M76 438C126 421 164 454 212 438C261 422 299 453 348 438C397 423 445 454 524 435V474C474 493 421 464 371 480C320 496 272 465 222 481C169 497 129 464 76 481V438Z" fill="#9FA3D0"/>
+
+  <path d="M76 476C126 458 165 491 214 476C264 461 301 491 350 476C400 461 448 491 524 472" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity=".75"/>
+
+  <!-- Small moisture circles -->
+  <g fill="#EEEFF8" opacity=".9">
+    <circle cx="135" cy="451" r="7"/>
+    <circle cx="184" cy="465" r="5"/>
+    <circle cx="267" cy="449" r="7"/>
+    <circle cx="345" cy="465" r="5"/>
+    <circle cx="433" cy="449" r="7"/>
+  </g>
+
+  <!-- Labels -->
+  <text x="76" y="216" fill="#ad51c1" font-family="DM Sans, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5">
+    ACTIVE
+  </text>
+
+  <text x="76" y="520" fill="#ad51c1" font-family="DM Sans, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5">
+    HEALTHY SKIN BARRIER
+  </text>
+
+  <!-- Barrier shield -->
+  <g transform="translate(462 158)">
+    <circle cx="42" cy="42" r="39" fill="#B6B8DB" opacity=".65"/>
+    <path d="M42 18L62 26V43C62 56 54 66 42 72C30 66 22 56 22 43V26L42 18Z" fill="#ad51c1"/>
+    <path d="M33 44L39 50L52 36" stroke="#EEEFF8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
