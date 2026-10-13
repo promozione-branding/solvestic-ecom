@@ -56,7 +56,7 @@ export default function FAQSection() {
             Your questions,
             <span className="block text-[#7D45C2]">
               clearly answered.
-            </span>
+            </span> 
           </h2>
         </motion.div>
 

@@ -10,6 +10,7 @@ import ProductCatalog from "@/components/home/ProductCatalog";
 import SkinConcernsSection from "@/components/home/SkinConcerns";
 import SolvesticMarquee from "@/components/home/SolvesticMarquee";
 import VideoTestimonials from "@/components/home/VideoTestimonials";
+import Certifications from "@/components/home/Certifications";
 import WhyChooseUs from "@/components/home/WhyChooseUs";
 
 export default function Home() {
@@ -29,6 +30,7 @@ export default function Home() {
       <ProductCatalog />
       <ActivatorSection />
       <WhyChooseUs />
+        <Certifications />
       <FAQSection />
     </>
   );
