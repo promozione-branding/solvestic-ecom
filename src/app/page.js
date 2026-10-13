@@ -12,7 +12,7 @@ import SolvesticMarquee from "@/components/home/SolvesticMarquee";
 import VideoTestimonials from "@/components/home/VideoTestimonials";
 import Certifications from "@/components/home/Certifications";
 import WhyChooseUs from "@/components/home/WhyChooseUs";
-import Jointcommunity from "@/components/home/Jointcommunity";
+import Jointcommunity from "@/components/home/Joincommunity";
 
 export default function Home() {
   return (
