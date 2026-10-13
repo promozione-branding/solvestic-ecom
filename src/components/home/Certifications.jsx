@@ -157,11 +157,11 @@ export default function Certifications() {
                             <h3
                                 className="
                                     relative w-full break-words
-                                    text-center text-[9px] font-semibold
+                                    text-center text-[12px] font-semibold
                                     uppercase leading-tight
                                     tracking-tight text-[#2D1557]
-                                    sm:text-[10px]
-                                    lg:text-[11px]
+                                    sm:text-[13px]
+                                    lg:text-[15px]
                                 "
                             >
                                 {certificate.title}
