@@ -4,7 +4,7 @@ import React from "react";
 
 export default function About() {
   return (
-    <section className="w-full bg-white mt-28 text-[#26244F]">
+    <section className="w-full bg-white mt-2 text-[#26244F]">
 
       {/* =====================================================
           HERO / INTRO
