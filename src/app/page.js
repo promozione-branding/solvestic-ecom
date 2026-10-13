@@ -22,7 +22,7 @@ export default function Home() {
           console.log("Add product to cart:", product);
         }}
       />
-      <VideoTestimonials />
+      <VideoTestimonials /> 
       <AboutSection />
       <SolvesticMarquee />
       <SkinConcernsSection />
