@@ -256,7 +256,7 @@ export default function BestSellersSection({ onAddToCart }) {
 
                 {/* Categories */}
                 <div className="mb-5">
-                    <div className="flex gap-5 overflow-x-auto py-3 sm:justify-center sm:gap-8 lg:gap-10">
+                    <div className="flex gap-5 overflow-x-auto py-3 sm:justify-center sm:gap-8 lg:gap-10 overflow-y-hidden">
                         {categories.map((category, index) => {
                             const active = activeCategory === category.name;
 

@@ -1,276 +1,558 @@
-
 "use client";
 
 import React from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
 import {
-    ArrowUpRight,
-    Mail,
-    MapPin,
-    ArrowRight,
-    PhoneCall,
-} from "lucide-react";
-import { FaInstagram, FaYoutube } from "react-icons/fa";
+    motion,
+    useScroll,
+    useTransform,
+} from "framer-motion";
+import { Building2, Clock3, MapPin, Phone, Mail } from "lucide-react";
+import {
+    FaInstagram,
+    FaFacebookF,
+    FaYoutube,
+    FaLinkedinIn,
+    FaSnapchatGhost,
+} from "react-icons/fa";
 
-const fadeUp = {
-    hidden: { opacity: 0, y: 25 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: { duration: 0.65, ease: "easeOut" },
+import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
+
+const socials = [
+    {
+        name: "Instagram",
+        icon: FaInstagram,
+        href: "https://www.instagram.com/solvesticcare",
     },
-};
+    {
+        name: "Facebook",
+        icon: FaFacebookF,
+        href: "https://www.facebook.com/profile.php?id=61592286175717",
+    },
+    {
+        name: "Youtube",
+        icon: FaYoutube,
+        href: "https://www.youtube.com/@solvesticcare",
+    },
+    {
+        name: "LinkedIn",
+        icon: FaLinkedinIn,
+        href: "https://www.linkedin.com/in/solvesticwellness",
+    },
+    {
+        name: "Snapchat",
+        icon: FaSnapchatGhost,
+        href: "https://www.snapchat.com/@solvestic",
+    },
+];
 
 export default function Footer() {
-    const pathname = usePathname();
+    const { scrollYProgress } = useScroll();
 
-    if (pathname?.startsWith("/admin")) return null;
+    /*
+     * Logo starts zoomed out.
+     * When the footer enters the viewport,
+     * it smoothly scales up.
+     */
+    const logoScale = useTransform(
+        scrollYProgress,
+        [0.72, 0.82, 0.92],
+        [0.72, 0.92, 1.08]
+    );
+
+    const logoY = useTransform(
+        scrollYProgress,
+        [0.22, 0.99],
+        [70, 0]
+    );
+
+    const logoOpacity = useTransform(
+        scrollYProgress,
+        [0.68, 0.78],
+        [0.45, 1]
+    );
 
     return (
-        <footer className="overflow-hidden bg-[#faf7fc] text-[#28232f]">
-            {/* Community Banner */}
-            <section className="">
+        <footer className="relative overflow-hidden bg-white">
+
+            {/* ================================================= */}
+            {/* LOGO ZOOM SECTION */}
+            {/* ================================================= */}
+
+            <section className="relative flex h-[15vh] md:h-[30vh] md:min-h-[400px] items-center justify-center overflow-hidden">
+
+                {/* SOFT BACKGROUND GLOW */}
+                {/* <div
+                    className="
+                        pointer-events-none
+                        absolute
+                        left-1/2
+                        top-1/2
+                        h-[70vw]
+                        w-[70vw]
+                        max-h-[900px]
+                        max-w-[900px]
+                        -translate-x-1/2
+                        -translate-y-1/2
+                        rounded-full
+                        bg-white
+                        blur-3xl
+                    "
+                /> */}
+
+                {/* LOGO */}
                 <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, amount: 0.15 }}
-                    variants={fadeUp}
-                    className="relative mx-auto min-h-[340px] max-w-[1600px] overflow-hidden bg-[#e9ddf5] sm:min-h-[390px] lg:min-h-[420px]"
+                    style={{
+                        scale: logoScale,
+                        y: logoY,
+                        // opacity: logoOpacity,
+                    }}
+                    className="
+                        relative
+                        z-10
+                        flex
+                        w-[90%]
+                        max-w-[1500px]
+                        items-center
+                        justify-center
+                        bg-white
+                        px-8
+                        md:px-14
+                        lg:px-20
+                    "
                 >
-                    {/* Background image */}
-                    <Image
-                        src="/footer.png"
-                        alt="Solvestic moisturizer on a lavender studio background"
-                        fill
-                        sizes="100vw"
-                        priority={false}
-                        className="object-cover object-center"
+                    <img
+                        src="/solve.png"
+                        alt="Solvestic"
+                        className="
+                            h-auto
+                            w-[70%]
+                            object-contain
+                        "
                     />
-
-                    {/* Soft overlay for text readability */}
-                    {/* <div className="absolute inset-0 bg-gradient-to-r from-[#f8efff]/35 via-transparent to-transparent" /> */}
-
-                    <div className="relative z-10 grid min-h-[340px] items-center gap-6 px-5 py-8 sm:min-h-[390px] sm:px-9 lg:min-h-[420px] lg:grid-cols-[1fr_auto_1fr] lg:gap-8 lg:px-10">
-                        {/* Main message */}
-                        <motion.div
-                            variants={fadeUp}
-                            className="order-first mx-auto max-w-[560px] text-center lg:order-none"
-                        >
-                            <div className="relative mx-auto mb-5 h-10 w-40 sm:h-12 sm:w-62">
-                                <Image
-                                    src="/logo/solvestic.png"
-                                    alt="Solvestic"
-                                    fill
-                                    sizes="192px"
-                                    className="object-cover"
-                                />
-                            </div>
-
-                            <p className="text-3xl font-semibold leading-tight tracking-tight text-[#6352a0] sm:text-4xl lg:text-5xl">
-                                Join the Community
-                            </p>
-
-                            <div className="mx-auto mt-1 mb-4 h-[2px] w-20 rounded-full bg-[#b7a3dc]" />
-
-                            <p className="mx-auto max-w-[490px] text-sm leading-6 text-[#37303f] sm:text-base sm:leading-7">
-                                Be the first to know about new launches,
-                                exclusive discounts and community giveaways.
-                            </p>
-
-                            <div className="flex mt-5 justify-center items-center gap-4">
-                                <div className="p-1 rounded-2xl overflow-hidden">
-                                    <Image
-                                        src={"/Instagram-QR.png"}
-                                        alt="Logo"
-                                        className="object-cover h-30 w-full"
-                                        width={100}
-                                        height={100}
-                                    />
-                                </div>
-
-                                <div className="p-1 rounded-2xl overflow-hidden">
-                                    <Image
-                                        src={"/youtube-qr.png"}
-                                        alt="Logo"
-                                        className="object-cover h-30 w-full"
-                                        width={100}
-                                        height={100}
-                                    />
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
                 </motion.div>
+
             </section>
 
-            {/* Main Footer */}
-            <div className="mx-auto max-w-[1600px] px-5 pb-7 pt-8 sm:px-8 sm:pt-10 lg:px-12">
-                <div className="grid gap-10 border-b border-[#e8e0ef] pb-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:gap-12">
-                    {/* Brand */}
-                    <motion.div
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: false }}
-                        variants={fadeUp}
+            {/* ================================================= */}
+            {/* FOOTER CONTENT */}
+            {/* ================================================= */}
+
+            <section
+                className="
+                    border-t
+                    border-black/20
+                    bg-[#b773c5] text-white
+                "
+            >
+
+                <div className="mx-auto max-w-[1600px]">
+
+                    <div
+                        className="
+                            grid
+                            grid-cols-1
+                            lg:grid-cols-[1.6fr_0.8fr_0.8fr_1fr]
+                        "
                     >
-                        <Link href="/" className="inline-flex">
-                            <div className="relative h-12 w-62">
-                                <Image
-                                    src="/logo/solvestic.png"
-                                    alt="Solvestic skincare"
-                                    fill
-                                    sizes="192px"
-                                    className="object-cover object-left"
+
+                        {/* ===================================== */}
+                        {/* NEWSLETTER */}
+                        {/* ===================================== */}
+
+                        <div
+                            className="
+                                border-b
+                                border-black/20
+                                p-4
+                                md:p-10
+                                lg:border-b-0
+                                lg:border-r
+                                lg:p-12
+                                xl:p-14
+                            "
+                        >
+
+                            <p
+                                className="
+                                    max-w-lg
+                                    text-base
+                                    leading-8
+                                    text-white
+                                    md:text-xl
+                                "
+                            >
+                                For the skin- smart generation.
+                            </p>
+
+                            <p
+                                className="
+                                    mt-5
+                                    max-w-xl
+                                    text-sm
+                                    md:leading-7
+                                    text-white
+                                    md:text-base
+                                "
+                            >
+                                Glaze your inbox with skincare tips,
+                                thoughtful rituals and exclusive content
+                                from Solvestic.
+                            </p>
+
+                            {/* EMAIL FORM */}
+                            <form
+                                onSubmit={(e) => e.preventDefault()}
+                                className="
+                                    mt-7
+                                    flex
+                                    max-w-[560px]
+                                    overflow-hidden
+                                    rounded-2xl
+                                    bg-white
+                                "
+                            >
+
+                                <input
+                                    type="email"
+                                    placeholder="Email Address"
+                                    className="
+                                        min-w-0
+                                        flex-1
+                                        bg-transparent
+                                        px-5
+                                        py-4
+                                        text-sm
+                                        text-black
+                                        outline-none
+                                        placeholder:text-[#563477]/50
+                                        md:text-base
+                                    "
                                 />
-                            </div>
-                        </Link>
 
-                        <p className="mt-5 max-w-sm text-sm leading-7 text-[#77717f]">
-                            Thoughtful skincare for your everyday ritual.
-                            Discover formulations designed to make self-care
-                            feel simple, considered and meaningful.
-                        </p>
+                                <button
+                                    type="submit"
+                                    className="
+                                        border-l
+                                        border-[#2D1557]/15
+                                        px-5
+                                        text-sm
+                                        font-semibold
+                                        uppercase
+                                        tracking-wide
+                                        text-[#2D1557]
+                                        transition-colors
+                                        duration-300
+                                        hover:bg-[#7D45C2]
+                                        hover:text-white
+                                        md:px-7
+                                    "
+                                >
+                                    Subscribe
+                                </button>
 
-                        <div className="mt-5 flex gap-3">
-                            <a
-                                href="https://www.instagram.com/solvesticcare"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label="Instagram"
-                                className="flex h-10 w-10 items-center justify-center text-[#7D45C2] rounded-full border border-[#7D45C2] bg-white transition hover:bg-[#7D45C2] hover:text-white"
+                            </form>
+
+                            <p
+                                className="
+                                    mt-4
+                                    text-xs
+                                    leading-5
+                                    text-white
+                                "
                             >
-                                <FaInstagram size={18} />
-                            </a>
-                            <a
-                                href="https://www.youtube.com/@solvesticcare"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label="YouTube"
-                                className="flex h-10 w-10 items-center justify-center text-[#7D45C2] rounded-full border border-[#7D45C2] bg-white transition hover:bg-[#7D45C2] hover:text-white"
-                            >
-                                <FaYoutube size={18} />
-                            </a>
+                                By signing up, you agree to our Privacy
+                                Policy.
+                            </p>
+
                         </div>
-                    </motion.div>
 
-                    {/* Explore */}
-                    <FooterColumn
-                        title="Explore"
-                        links={[
-                            { label: "Home", href: "/" },
-                            { label: "Shop All", href: "/our-products" },
-                            { label: "About Us", href: "/about-us" },
-                            { label: "Contact", href: "/contact-us" },
-                            { label: "Newsletter", href: "/newsletter" },
-                        ]}
-                    />
+                        {/* ===================================== */}
+                        {/* NAVIGATE */}
+                        {/* ===================================== */}
 
-                    {/* Customer care */}
-                    <FooterColumn
-                        title="Customer Care"
-                        links={[
-                            { label: "Privacy Policy", href: "/privacy-policy" },
-                            { label: "Shipping Policy", href: "/shipping-policy" },
-                            { label: "Terms & Conditions", href: "/terms-and-conditions" },
-                            { label: "Returns & Refunds", href: "/return-policy" },
-                            { label: "Track Your Order", href: "/track-order" },
-                        ]}
-                    />
-
-                    {/* Newsletter */}
-                    <motion.div
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: false }}
-                        variants={fadeUp}
-                    >
-                        <h3 className="text-lg font-semibold">Office Address</h3>
-                        <p className="mt-1 text-base font-semibold text-[#57565a]">
-                            Solvestic Wellness Private Limited
-                        </p>
-                        <p className="mt-1 text-sm text-[#57565a]">
-                            We're here Monday – Saturday
-                        </p>
-                        <p className="mt-2 text-sm leading- text-[#57565a]">
-                            11:00 AM – 6:15 PM
-                        </p>
-                        <p className="mt-2 text-sm leading- text-[#57565a]">
-                            Office No. 1001, Pearl Best Heights-2, <br />
-                            Plot-C9, NSP, Pitampura, <br />
-                            Delhi – 110034
-                        </p>
-
-
-
-
-                        <a
-                            href="tel:919220788799"
-                            className="mt-4 flex items-center gap-2 break-all text-sm text-[#5a575e] transition hover:text-[#7D45C2]"
+                        <div
+                            className="
+                                border-b
+                                border-black/20
+                                p-4
+                                md:p-10
+                                lg:border-b-0
+                                lg:border-r
+                                lg:p-12
+                            "
                         >
-                            <PhoneCall size={16} />
-                            +91 9220788799
-                        </a>
-                        <a
-                            href="mailto:care@solvestic.com"
-                            className="mt-4 flex items-center gap-2 break-all text-sm text-[#5a575e] transition hover:text-[#7D45C2]"
+
+                            <h3
+                                className="
+                                    text-sm
+                                    font-bold
+                                    uppercase
+                                    tracking-[0.15em]
+                                    text-white
+                                "
+                            >
+                                Navigate
+                            </h3>
+
+                            <nav className="mt-3 md:mt-7 flex flex-col gap-3 md:gap-5">
+
+                                {[
+                                    { name: "Home", href: "/" },
+                                    { name: "About Us", href: "/about-us" },
+                                    { name: "Our Story", href: "/about#our-story" },
+                                    { name: "Our Philosophy", href: "/our-philosophy" },
+                                ].map((item, idx) => (
+                                    <a
+                                        key={idx}
+                                        href={item.href}
+                                        className="
+                                            group
+                                            flex
+                                            items-center
+                                            gap-2
+                                            text-base
+                                            text-white/80
+                                            transition-colors
+                                            duration-300
+                                            hover:text-white
+                                        "
+                                    >
+                                        {item.name}
+
+                                        <ArrowUpRight
+                                            size={16}
+                                            className="
+                                                opacity-0
+                                                transition-all mt-2
+                                                duration-300
+                                                group-hover:translate-x-1
+                                                group-hover:-translate-y-1
+                                                group-hover:opacity-100
+                                            "
+                                        />
+                                    </a>
+                                ))}
+
+                            </nav>
+
+                        </div>
+
+                        {/* ===================================== */}
+                        {/* SOCIAL */}
+                        {/* ===================================== */}
+
+                        <div
+                            className="
+                                border-b
+                                border-black/20
+                                p-4
+                                md:p-10
+                                lg:border-b-0
+                                lg:border-r
+                                lg:p-12
+                            "
                         >
-                            <Mail size={16} />
-                            care@solvestic.com
-                        </a>
-                    </motion.div>
+
+                            <h3
+                                className="
+                                    text-sm
+                                    font-bold
+                                    uppercase
+                                    tracking-[0.15em]
+                                    text-white
+                                "
+                            >
+                                Social
+                            </h3>
+
+                            <div className="mt-3 md:mt-7 flex flex-col gap-3 md:gap-5">
+
+                                {socials.map((social) => {
+                                    const Icon = social.icon;
+
+                                    return (
+                                        <a
+                                            key={social.name}
+                                            href={social.href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="
+                                                group
+                                                flex
+                                                items-center
+                                                gap-3
+                                                text-base
+                                                text-white/80
+                                                transition-colors
+                                                duration-300
+                                                hover:text-white
+                                            "
+                                        >
+
+                                            <Icon
+                                                size={17}
+                                                className="
+                                                    transition-transform
+                                                    duration-300
+                                                    group-hover:scale-110
+                                                "
+                                            />
+
+                                            <span>
+                                                {social.name}
+                                            </span>
+
+                                        </a>
+                                    );
+                                })}
+
+                            </div>
+
+                        </div>
+
+                        {/* ===================================== */}
+                        {/* OFFICIAL / SUPPORT */}
+                        {/* ===================================== */}
+                        <div className="p-4 md:p-10 lg:p-12">
+
+                            <div className="space-y-7">
+
+                                {/* Address & Support */}
+                                <div className="space-y-8">
+
+                                    {/* Address */}
+                                    <div className="flex items-start gap-4">
+                                        <div
+                                            className="
+                flex h-11 w-11 shrink-0 items-center justify-center
+                rounded-full bg-white/10 text-white
+                ring-1 ring-white/10
+            "
+                                        >
+                                            <MapPin size={20} strokeWidth={1.8} />
+                                        </div>
+
+                                        <div>
+                                            <p className="text-xs font-medium uppercase tracking-[0.12em] text-white/90">
+                                                Office Address
+                                            </p>
+                                            <p className="mt-1 text-base font-semibold md:leading-relaxed text-white">
+                                                Solvestic Wellness Private Limited
+                                            </p>
+
+                                            <p className="mt-2 max-w-md text-sm md:leading-7 text-white">
+                                                Office No. 1001, Pearl Best Heights-2,
+                                                <br />
+                                                Plot-C9, NSP, Pitampura,
+                                                <br />
+                                                Delhi – 110034
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Support */}
+                                    <div className="flex items-start gap-4">
+                                        <div
+                                            className="
+            flex h-11 w-11 shrink-0 items-center justify-center
+            rounded-full bg-white/10 text-white
+            ring-1 ring-white/10
+        "
+                                        >
+                                            <Clock3 size={20} strokeWidth={1.8} />
+                                        </div>
+
+                                        <div>
+                                            <p className="text-xs font-medium uppercase tracking-[0.12em] text-white/90">
+                                                Support
+                                            </p>
+
+                                            <p className="mt-1 text-sm leading-7 text-white">
+                                                We're here Monday – Saturday
+                                                <br />
+                                                <span className="text-white/75">
+                                                    11:00 AM – 6:15 PM
+                                                </span>
+                                            </p>
+
+                                            <p className="mt-1 text-sm leading-7 text-white">
+                                                Drop us a note anytime.
+                                            </p>
+
+                                            {/* ── PHONE ── */}
+                                            <a
+                                                href="tel:+919220788799"
+                                                className="
+                mt-3 flex items-center gap-2
+                text-sm text-white/90
+                transition-colors duration-300
+                hover:text-white
+            "
+                                            >
+                                                <Phone size={14} strokeWidth={1.8} className="shrink-0" />
+                                                +91 9220788799
+                                            </a>
+
+                                            {/* ── EMAIL ── */}
+                                            <a
+                                                href="mailto:care@solvestic.com"
+                                                className="
+                mt-2 flex items-center gap-2
+                text-sm text-white/90
+                transition-colors duration-300
+                hover:text-white
+            "
+                                            >
+                                                <Mail size={14} strokeWidth={1.8} className="shrink-0" />
+                                                care@solvestic.com
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
 
-                {/* Bottom bar */}
-                <div className="flex flex-col items-center justify-between gap-3 pt-4 text-center text-xs text-[#5b595d] sm:flex-row sm:text-left">
+            </section>
+
+            {/* ================================================= */}
+            {/* BOTTOM BAR */}
+            {/* ================================================= */}
+
+            <div className="border-t border-black/20 bg-[#b773c5]">
+
+                <div
+                    className="
+                        mx-auto
+                        flex
+                        max-w-[1600px]
+                        flex-col
+                        justify-between
+                        gap-3
+                        px-8
+                        py-5
+                        text-xs
+                        text-[#2D1557]/60
+                        md:flex-row
+                        md:px-12
+                    "
+                >
+
                     <p>
                         © {new Date().getFullYear()} Solvestic. All rights reserved.
                     </p>
 
-                    <div className="flex flex-wrap justify-center gap-5">
-                        <Link
-                            href="/privacy-policy"
-                            className="transition hover:text-[#6e5aa8]"
-                        >
-                            Privacy Policy
-                        </Link>
-                        <Link
-                            href="/terms-and-conditions"
-                            className="transition hover:text-[#6e5aa8]"
-                        >
-                            Terms & Conditions
-                        </Link>
-                    </div>
+                    <p>
+                        Thoughtfully made for your skin.
+                    </p>
+
                 </div>
+
             </div>
+
         </footer>
-    );
-}
-
-function FooterColumn({ title, links }) {
-    return (
-        <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-        >
-            <h3 className="text-lg font-semibold">{title}</h3>
-
-            <ul className="mt-2 space-y-3">
-                {links.map((link) => (
-                    <li key={link.label}>
-                        <Link
-                            href={link.href}
-                            className="inline-flex items-center gap-1 text-sm text-[#403f41] transition hover:translate-x-1 hover:text-[#7D45C2]"
-                        >
-                            {link.label}
-                        </Link>
-                    </li>
-                ))}
-            </ul>
-        </motion.div>
     );
 }

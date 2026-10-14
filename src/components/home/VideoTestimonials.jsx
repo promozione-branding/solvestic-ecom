@@ -279,7 +279,7 @@ export default function VideoTestimonials() {
                     className="mb-2 flex flex-col items-center text-center"
                 >
                     <h2 className="text-2xl font-light tracking-[0.02em] text-[#252329] sm:text-3xl lg:text-4xl">
-                        REAL PEOPLE. REAL RESULTS.
+                        REAL PEOPLE. <span className="text-[#7D45C2]">REAL RESULTS.</span>
                     </h2>
                 </motion.div>
 
