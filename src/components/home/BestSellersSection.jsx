@@ -9,12 +9,11 @@ import { addToWishlist } from "@/lib/wishlist-storage";
 const DEFAULT_IMAGE =
     "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?auto=format&fit=crop&w=500&q=85";
 
-const formatPrice = (price) =>
-    new Intl.NumberFormat("en-IN", {
-        style: "currency",
-        currency: "INR",
-        maximumFractionDigits: 0,
-    }).format(Number(price) || 0);
+const formatPrice = (price) => new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+}).format(Number(price) || 0);
 
 const getList = (data, key) => {
     if (Array.isArray(data)) return data;
@@ -269,10 +268,8 @@ export default function BestSellersSection({ onAddToCart }) {
                 <div className="mb-8">
                     <div className="flex gap-5 overflow-x-auto overflow-y-hidden py-3 sm:justify-center sm:gap-8 lg:gap-10">
                         {allCategories.map((category, index) => {
-                            const categoryId =
-                                category._id === "all"
-                                    ? "all"
-                                    : String(category._id || category.id);
+                            const categoryId = category._id === "all"
+                                ? "all" : String(category._id || category.id);
 
                             const active = activeCategory === categoryId;
 

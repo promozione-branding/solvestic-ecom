@@ -348,7 +348,7 @@ export default function Products() {
                     }
                 } else {
                     // Guest cart uses the existing Solvestic storage helper.
-                    addToGuestCart(productId, 1, variantSize);
+                    addToGuestCart(productId, 1, variant);
                 }
 
                 window.dispatchEvent(
@@ -460,8 +460,8 @@ export default function Products() {
                             type="button"
                             onClick={() => setCategory(item)}
                             className={`shrink-0 rounded-full px-5 py-3 text-xs font-medium transition-all duration-300 sm:text-sm ${category === item
-                                    ? "bg-[#7D45C2] text-white shadow-md shadow-[#7d68b0]/15"
-                                    : "border border-[#e9e3ef] bg-white text-[#716a79] hover:border-[#b7a9d8] hover:text-[#7d68b0]"
+                                ? "bg-[#7D45C2] text-white shadow-md shadow-[#7d68b0]/15"
+                                : "border border-[#e9e3ef] bg-white text-[#716a79] hover:border-[#b7a9d8] hover:text-[#7d68b0]"
                                 }`}
                         >
                             {item}
@@ -563,8 +563,8 @@ export default function Products() {
                                                 }
                                                 aria-pressed={isWishlisted}
                                                 className={`absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full shadow-sm backdrop-blur transition sm:right-3 sm:top-3 ${isWishlisted
-                                                        ? "bg-[#7D45C2] text-white"
-                                                        : "bg-white/90 text-[#7D45C2] hover:bg-[#7D45C2] hover:text-white"
+                                                    ? "bg-[#7D45C2] text-white"
+                                                    : "bg-white/90 text-[#7D45C2] hover:bg-[#7D45C2] hover:text-white"
                                                     }`}
                                             >
                                                 <FiHeart
@@ -668,7 +668,7 @@ export default function Products() {
                     )}
 
                 {/* Cart and wishlist feedback */}
-                <AnimatePresence>
+                {/* <AnimatePresence>
                     {notice && (
                         <motion.div
                             initial={{ opacity: 0, y: 15 }}
@@ -689,7 +689,7 @@ export default function Products() {
                             </button>
                         </motion.div>
                     )}
-                </AnimatePresence>
+                </AnimatePresence> */}
             </section>
         </main>
     );

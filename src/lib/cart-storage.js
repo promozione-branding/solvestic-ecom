@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 
 const CART_STORAGE_KEY = "solvestic_guest_cart";
 const MAX_QUANTITY = 99;
@@ -143,10 +144,7 @@ export function addToGuestCart(productId, quantity = 1, variant = "") {
   const existing = items.find((entry) => getItemKey(entry) === key);
 
   if (existing) {
-    existing.quantity = Math.min(
-      MAX_QUANTITY,
-      existing.quantity + item.quantity
-    );
+    existing.quantity = Math.min(MAX_QUANTITY, existing.quantity + item.quantity);
   } else {
     if (items.length >= MAX_CART_ITEMS) {
       return { success: false, items };
@@ -156,7 +154,7 @@ export function addToGuestCart(productId, quantity = 1, variant = "") {
   }
 
   const success = saveGuestCart(items);
-
+  toast.success("Product added to cart successfully!");
   if (success) notifyCartUpdated();
 
   return {
@@ -211,7 +209,7 @@ export function removeFromGuestCart(productId, variant = "") {
   );
 
   const success = saveGuestCart(updatedItems);
-
+  if (success) notifyCartUpdated();
   return {
     success,
     items: success ? getGuestCart() : items,

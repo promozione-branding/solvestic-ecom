@@ -4,6 +4,7 @@ import SmoothScroll from "@/components/main/Smoothscroll";
 import Navbar from "@/components/main/Navbar";
 import Footer from "@/components/main/Footer";
 import ReduxProvider from "./ReduxProvider";
+import { Toaster } from "react-hot-toast";
 
 const bebasNeue = Bebas_Neue({
   variable: "--font-bebas-neue",
@@ -41,6 +42,9 @@ export default function RootLayout({ children }) {
             <Navbar />
             {children}
             <Footer />
+            <Toaster
+            // position="top-right"  
+            />
           </SmoothScroll>
         </ReduxProvider>
       </body>

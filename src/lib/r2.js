@@ -59,6 +59,48 @@ export async function uploadCategoryImage(file) {
     };
 }
 
+export async function uploadBlogImage(file) {
+    if (!bucket || !publicUrl) {
+        throw new Error("R2 bucket or public URL is not configured.");
+    }
+
+    const allowedTypes = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+        "image/avif": "avif",
+    };
+
+    if (!allowedTypes[file.type]) {
+        throw new Error("Only JPG, PNG, WEBP, and AVIF images are allowed.");
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+
+    if (file.size === 0 || file.size > maxSize) {
+        throw new Error("Image must be smaller than 5 MB.");
+    }
+
+    const extension = allowedTypes[file.type];
+    const key = `blogs/${randomUUID()}.${extension}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    await r2.send(
+        new PutObjectCommand({
+            Bucket: bucket,
+            Key: key,
+            Body: buffer,
+            ContentType: file.type,
+            CacheControl: "public, max-age=31536000, immutable",
+        })
+    );
+
+    return {
+        imageKey: key,
+        imageUrl: `${publicUrl}/${key}`,
+    };
+}
+
 export async function deleteR2Image(key) {
     if (!key) return;
 

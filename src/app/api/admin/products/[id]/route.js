@@ -107,8 +107,8 @@ async function cleanupImages(images) {
 }
 
 export async function GET(request, { params }) {
-    const authError = requireAdmin(request);
-    if (authError) return authError;
+    // const authError = requireAdmin(request);
+    // if (authError) return authError;
 
     try {
         const { id } = await params;

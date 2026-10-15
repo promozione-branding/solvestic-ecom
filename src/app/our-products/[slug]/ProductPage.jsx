@@ -255,7 +255,7 @@ export default function ProductPage({ initialProduct, slug }) {
         setAdding(true);
         try {
             const variantName = getVariantName(variant);
-
+            // console.log(variantName, variant)
             if (isLoggedIn) {
                 const response = await axios.put("/api/user/cart", {
                     productId,
@@ -270,7 +270,7 @@ export default function ProductPage({ initialProduct, slug }) {
                     );
                 }
             } else {
-                addToGuestCart(productId, quantity, variantName);
+                addToGuestCart(productId, quantity, variant);
             }
 
             window.dispatchEvent(new CustomEvent("solvestic-cart-updated"));
@@ -586,12 +586,12 @@ export default function ProductPage({ initialProduct, slug }) {
                             whileTap={{ scale: 0.99 }}
                             disabled={adding}
                             onClick={() => handleAddToCart(true)}
-                            className="flex min-h-[54px] w-full items-center justify-between rounded-full border border-[#7D45C2] bg-white px-6 text-sm font-medium text-[#7D45C2] transition hover:bg-[#f3ebfb] disabled:opacity-60"
+                            className="flex min-h-[54px] w-full items-center justify-center rounded-full border border-[#7D45C2] bg-white px-6 text-sm font-medium text-[#7D45C2] transition hover:bg-[#f3ebfb] disabled:opacity-60"
                         >
                             <span>Buy now</span>
-                            <span>
+                            {/* <span>
                                 {formatPrice(Number(activeVariant?.price || 0) * quantity)}
-                            </span>
+                            </span> */}
                         </motion.button>
 
                         {/* Add to cart */}
@@ -600,14 +600,14 @@ export default function ProductPage({ initialProduct, slug }) {
                             whileTap={{ scale: 0.99 }}
                             disabled={adding}
                             onClick={() => handleAddToCart(false)}
-                            className="flex min-h-[54px] w-full items-center justify-between rounded-full bg-[#7D45C2] px-6 text-sm font-medium text-white transition-colors hover:bg-[#6936aa] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="flex min-h-[54px] w-full items-center justify-center rounded-full bg-[#7D45C2] px-6 text-sm font-medium text-white transition-colors hover:bg-[#6936aa] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             <span className="flex items-center gap-2">
                                 <ShoppingBag size={17} strokeWidth={1.6} />
                                 {adding ? "Adding to cart..." : "Add to cart"}
                             </span>
 
-                            <span>{formatPrice(Number(activeVariant?.price || 0) * quantity)}</span>
+                            {/* <span>{formatPrice(Number(activeVariant?.price || 0) * quantity)}</span> */}
                         </motion.button>
                     </div>
 
