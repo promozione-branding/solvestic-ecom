@@ -29,7 +29,7 @@ import { FaFacebook, FaInstagram } from "react-icons/fa";
 const categories = [
     { name: "Shop", href: "/our-products" },
     { name: "Our Story", href: "/about-us" },
-    { name: "Our Philosophy", href: "/our-philosophy" },
+    // { name: "Our Philosophy", href: "/our-philosophy" },
     { name: "Contact", href: "/contact-us" },
     { name: "Newsletter", href: "/newsletter" },
 ];
