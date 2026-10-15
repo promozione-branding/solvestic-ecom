@@ -36,10 +36,11 @@ export default function Home() {
           handleAddToCart(product);
         }}
       />
-      <VideoTestimonials />
-      <AboutSection />
-      <SolvesticMarquee />
       <SkinConcernsSection />
+      <AboutSection />
+      <Certifications />
+      <VideoTestimonials />
+      <SolvesticMarquee />
       <FeaturedProducts />
       <ProductCatalog
         onAddToCart={(product) => {
@@ -47,8 +48,7 @@ export default function Home() {
         }}
       />
       <ActivatorSection />
-      <WhyChooseUs />
-      <Certifications />
+      {/* <WhyChooseUs /> */}
       <FounderReels />
       <FAQSection />
       <Jointcommunity />

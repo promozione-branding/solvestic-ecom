@@ -45,7 +45,7 @@ const BRAND = {
 // ============================================================
 
 const ANNOUNCEMENTS = [
-    "COMPLIMENTARY SHIPPING ON ORDERS OVER ₹2,000",
+    "COMPLIMENTARY SHIPPING ON ORDERS OVER ₹x,xxx",
     "DERMATOLOGICALLY TESTED",
     "SULPHATE & PARABEN FREE",
     "CRUELTY-FREE BEAUTY",
@@ -66,15 +66,15 @@ function AnnouncementMarquee() {
                     >
                         {ANNOUNCEMENTS.map((item, index) => (
                             <React.Fragment key={`${group}-${index}`}>
-                                <span className="px-5 text-[9px] font-medium tracking-[0.16em] sm:px-7 sm:text-[10px]">
+                                <span className="px-5 text-[9px] font-medium tracking-[0.16em] sm:px-7 sm:text-xs">
                                     {item}
                                 </span>
 
                                 <span
-                                    className="text-white/60"
+                                    className="text-white/90"
                                     aria-hidden="true"
                                 >
-                                    ✦
+                                    ●
                                 </span>
                             </React.Fragment>
                         ))}
