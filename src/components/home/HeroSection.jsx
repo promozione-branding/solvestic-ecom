@@ -32,7 +32,7 @@ const banners = [
     },
 ];
 
-const heading = "Your Beauty, Your Ritual.";
+const heading = "For the Skin, Smart Generation.";
 
 export default function HeroSection() {
     const [typedText, setTypedText] = useState("");
