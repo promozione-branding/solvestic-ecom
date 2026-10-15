@@ -81,7 +81,7 @@ export default function GuessNewLaunch() {
       <div className="mx-auto max-w-7xl">
 
         {/* HERO */}
-        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
+        {/* <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
 
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -127,7 +127,6 @@ export default function GuessNewLaunch() {
             </div>
           </motion.div>
 
-          {/* PRODUCT PREVIEW */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -176,12 +175,12 @@ export default function GuessNewLaunch() {
               Four possibilities. One exciting reveal.
             </div>
           </motion.div>
-        </div>
+        </div> */}
 
         {/* POLL */}
         <div
           id="launch-poll"
-          className="mt-16 scroll-mt-24 rounded-[2rem] bg-[#f7f3fc] p-5 sm:mt-15 sm:p-9"
+          className="scroll-mt-24 rounded-[2rem] bg-[#f7f3fc] p-5 sm:p-9"
         >
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#7D45C2]">
@@ -195,9 +194,7 @@ export default function GuessNewLaunch() {
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {products.map((product, index) => {
-              const percentage = getPercentage(
-                voteCounts[product.id]
-              );
+              const percentage = getPercentage(voteCounts[product.id]);
               const isSelected = selected === product.id;
 
               return (
@@ -205,7 +202,7 @@ export default function GuessNewLaunch() {
                   key={product.id}
                   initial={{ opacity: 0, y: 25 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.15 }}
+                  viewport={{ once: false, amount: 0.15 }}
                   transition={{
                     duration: 0.5,
                     delay: index * 0.1,
