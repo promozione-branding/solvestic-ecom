@@ -181,23 +181,19 @@ export default function GuessNewLaunch() {
         {/* POLL */}
         <div
           id="launch-poll"
-          className="mt-16 scroll-mt-24 rounded-[2rem] bg-[#f7f3fc] p-5 sm:mt-24 sm:p-9 lg:p-12"
+          className="mt-16 scroll-mt-24 rounded-[2rem] bg-[#f7f3fc] p-5 sm:mt-15 sm:p-9"
         >
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#7D45C2]">
               The community poll
             </p>
 
-            <h3 className="mt-4 text-2xl font-medium tracking-[-0.04em] text-[#28222e] sm:text-4xl">
+            <h3 className="mt-2 text-2xl font-medium tracking-[-0.04em] text-[#28222e] sm:text-4xl">
               Which product are you most excited about?
             </h3>
-
-            <p className="mt-3 text-sm leading-6 text-[#716a78]">
-              Pick your favourite and see how the community votes.
-            </p>
           </div>
 
-          <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {products.map((product, index) => {
               const percentage = getPercentage(
                 voteCounts[product.id]
@@ -307,7 +303,7 @@ export default function GuessNewLaunch() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="mt-7 flex flex-col items-center justify-center gap-2 text-center"
+                className="mt-5 flex flex-col items-center justify-center gap-2 text-center"
               >
                 <div className="flex items-center gap-2 text-sm font-semibold text-[#7D45C2]">
                   <CheckCircle2 className="h-5 w-5" />
@@ -321,11 +317,6 @@ export default function GuessNewLaunch() {
               </motion.div>
             )}
           </AnimatePresence>
-
-          <p className="mt-7 text-center text-[10px] leading-5 text-[#89818f]">
-            Demo poll results for illustration. Connect a database
-            to collect real votes and display shared results.
-          </p>
         </div>
       </div>
     </section>
