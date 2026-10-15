@@ -67,8 +67,8 @@ function validVariants(variants) {
 }
 
 export async function GET(request) {
-    const authError = requireAdmin(request);
-    if (authError) return authError;
+    // const authError = requireAdmin(request);
+    // if (authError) return authError;
 
     try {
         await connectDB();
@@ -97,7 +97,6 @@ export async function GET(request) {
 
         const products = await Product.find(filter)
             .populate("categoryId", "name slug")
-            .sort({ createdAt: -1 })
             .lean();
 
         return NextResponse.json({

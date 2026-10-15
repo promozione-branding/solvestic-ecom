@@ -13,14 +13,27 @@ import VideoTestimonials from "@/components/home/VideoTestimonials";
 import Certifications from "@/components/home/Certifications";
 import WhyChooseUs from "@/components/home/WhyChooseUs";
 import Jointcommunity from "@/components/home/Joincommunity";
+import { addToGuestCart } from "@/lib/cart-storage";
+import FounderReels from "@/components/home/FounderReels";
 
 export default function Home() {
+  const handleAddToCart = (product) => {
+    console.log(product, product.variants[0])
+    const result = addToGuestCart(product._id, 1, product.variants[0]);
+
+    if (result.success) {
+      console.log("Cart updated:", result.items);
+    } else {
+      console.error("Could not update the cart.");
+    }
+  };
+
   return (
     <>
       <HeroSection />
       <BestSellersSection
         onAddToCart={(product) => {
-          console.log("Add product to cart:", product);
+          handleAddToCart(product);
         }}
       />
       <VideoTestimonials />
@@ -28,10 +41,15 @@ export default function Home() {
       <SolvesticMarquee />
       <SkinConcernsSection />
       <FeaturedProducts />
-      <ProductCatalog />
+      <ProductCatalog
+        onAddToCart={(product) => {
+          handleAddToCart(product);
+        }}
+      />
       <ActivatorSection />
       <WhyChooseUs />
       <Certifications />
+      <FounderReels />
       <FAQSection />
       <Jointcommunity />
     </>

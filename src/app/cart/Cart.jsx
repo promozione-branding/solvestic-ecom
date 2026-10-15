@@ -1,8 +1,7 @@
 
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
+import React, { useCallback, useEffect, useMemo, useRef, useState, } from "react";
 import Link from "next/link";
 import {
     ArrowLeft,
@@ -11,112 +10,412 @@ import {
     Check,
     ChevronRight,
     Heart,
+    LoaderCircle,
     LockKeyhole,
     Minus,
     Plus,
     ShoppingBag,
-    ShoppingCart,
     Tag,
     Trash2,
     Truck,
 } from "lucide-react";
 
-const initialItems = [
-    {
-        id: 1,
-        name: "Solvestic Premium Chair",
-        variant: "Black / Premium Edition",
-        price: 12999,
-        oldPrice: 15999,
-        quantity: 1,
-        image: "/products/chair-1.png",
-        inStock: true,
-    },
-    {
-        id: 2,
-        name: "Solvestic Ergonomic Chair",
-        variant: "Grey / Standard Edition",
-        price: 8999,
-        oldPrice: 10999,
-        quantity: 1,
-        image: "/products/chair-2.png",
-        inStock: true,
-    },
-];
+import {
+    getGuestCart,
+    saveGuestCart,
+    addToGuestCart,
+    updateGuestCartQuantity,
+    removeFromGuestCart,
+    clearGuestCart,
+} from "@/lib/cart-storage";
+
+const MAX_QUANTITY = 99;
+const FREE_SHIPPING_THRESHOLD = 1999;
 
 const formatPrice = (price) =>
     new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
         maximumFractionDigits: 0,
-    }).format(price);
+    }).format(Number(price) || 0);
+
+function getProductPrice(product) {
+    return Number(
+        product?.sellingPrice ??
+        product?.salePrice ??
+        product?.price ??
+        0
+    );
+}
+
+function getOriginalPrice(product) {
+    return Number(
+        product?.originalPrice ??
+        product?.compareAtPrice ??
+        product?.mrp ??
+        product?.price ??
+        0
+    );
+}
+
+function getProduct(item) {
+    if (item?.productId && typeof item.productId === "object") {
+        return item.productId;
+    }
+
+    if (item?.product && typeof item.product === "object") {
+        return item.product;
+    }
+
+    return item;
+}
+
+function getProductId(item) {
+    const product = getProduct(item);
+
+    return String(
+        product?._id ||
+        product?.id ||
+        (typeof item?.productId === "string" ? item.productId : "") ||
+        ""
+    );
+}
+
+function getProductName(product) {
+    return product?.name || product?.title || "Product";
+}
+
+function getProductImage(product) {
+    return (
+        product?.images?.[0]?.url ||
+        product?.imageUrl ||
+        product?.thumbnail ||
+        product?.image ||
+        "/placeholder.png"
+    );
+}
+
+function getSelectedVariant(product, variant) {
+    const size =
+        typeof variant === "object"
+            ? variant?.size
+            : variant;
+
+    const variants = product?.variants || [];
+
+    return (
+        variants.find(
+            (item) =>
+                String(item.size).trim().toLowerCase() ===
+                String(size || "").trim().toLowerCase()
+        ) ||
+        (!size ? variants[0] : null) ||
+        null
+    );
+}
+
+function normalizeCartItem(item) {
+    const product = getProduct(item);
+    const selectedVariant =
+        typeof item.variant === "object"
+            ? item.variant
+            : getSelectedVariant(product, item.variant);
+
+    return {
+        productId: getProductId(item),
+        name: getProductName(product),
+        slug: product?.slug || "",
+        image: getProductImage(product),
+        price: Number(selectedVariant?.price ?? 0),
+        oldPrice: Number(selectedVariant?.oldPrice ?? selectedVariant?.price ?? 0),
+        variant: selectedVariant?.size || "",
+        quantity: Number(item.quantity) || 1,
+        inStock: product?.status !== "inactive",
+    };
+}
 
 export default function Cart() {
-    const [items, setItems] = useState(initialItems);
+    const mergeStartedRef = useRef(false);
+    const [items, setItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [busyKey, setBusyKey] = useState("");
+    const [error, setError] = useState("");
     const [coupon, setCoupon] = useState("");
     const [appliedCoupon, setAppliedCoupon] = useState(false);
     const [couponMessage, setCouponMessage] = useState("");
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    const updateQuantity = (id, change) => {
-        setItems((current) =>
-            current.map((item) =>
-                item.id === id
-                    ? {
-                        ...item,
-                        quantity: Math.max(
-                            1,
-                            Math.min(10, item.quantity + change)
-                        ),
-                    }
-                    : item
-            )
-        );
-    };
+    const request = useCallback(async (url, options = {}) => {
+        const response = await fetch(url, {
+            credentials: "include",
+            ...options,
+            headers: {
+                "Content-Type": "application/json",
+                ...options.headers,
+            },
+        });
 
-    const removeItem = (id) => {
-        setItems((current) => current.filter((item) => item.id !== id));
-    };
+        const data = await response.json().catch(() => ({}));
 
-    const subtotal = items.reduce(
-        (total, item) => total + item.price * item.quantity,
-        0
-    );
-
-    const originalTotal = items.reduce(
-        (total, item) => total + item.oldPrice * item.quantity,
-        0
-    );
-
-    const discount = originalTotal - subtotal;
-    const couponDiscount = appliedCoupon ? Math.round(subtotal * 0.1) : 0;
-    const shipping = subtotal === 0 || subtotal >= 1999 ? 0 : 99;
-    const total = subtotal - couponDiscount + shipping;
-    const totalItems = items.reduce((total, item) => total + item.quantity, 0);
-
-    const applyCoupon = (e) => {
-        e.preventDefault();
-        const value = coupon.trim().toUpperCase();
-
-        if (!value) {
-            setCouponMessage("Please enter a coupon code.");
-            return;
+        if (!response.ok) {
+            const err = new Error(data.message || "Request failed.");
+            err.status = response.status;
+            throw err;
         }
 
-        // Demo UI coupon only.
-        if (value === "WELCOME10" && !appliedCoupon) {
+        return data;
+    }, []);
+
+    // Loads either the logged-in cart or the guest cart.
+    const loadCart = useCallback(async () => {
+        setLoading(true);
+        setError("");
+
+        try {
+            let guestItems = getGuestCart();
+            // console.log(guestItems);
+
+            try {
+                const data = await request("/api/user/cart");
+                setIsAuthenticated(true);
+
+                // Merge browser items into the account cart only once.
+                if (guestItems.length > 0 && !mergeStartedRef.current) {
+                    mergeStartedRef.current = true;
+
+                    try {
+                        const merged = await request("/api/user/cart/merge", {
+                            method: "POST",
+                            body: JSON.stringify({
+                                items: guestItems.map((item) => ({
+                                    productId: item.productId,
+                                    quantity: item.quantity,
+                                    variant:
+                                        typeof item.variant === "object"
+                                            ? item.variant?.size || ""
+                                            : item.variant || "",
+                                })),
+                            }),
+                        });
+
+                        if (merged.success) {
+                            clearGuestCart();
+                            data.cart = merged.cart;
+                        } else {
+                            mergeStartedRef.current = false;
+                        }
+                    } catch (mergeError) {
+                        mergeStartedRef.current = false;
+
+                        console.error("Guest cart merge failed:", mergeError);
+                        setError(
+                            "Your account cart loaded, but guest items could not be merged. Please try again."
+                        );
+                    }
+                }
+
+                const accountItems = (data.cart?.items || []).map(normalizeCartItem);
+                setItems(accountItems);
+            } catch (authError) {
+                if (authError.status !== 401) throw authError;
+
+                setIsAuthenticated(false);
+                guestItems = getGuestCart();
+
+                // Resolve product details for guest cart IDs.
+                const resolved = await Promise.all(
+                    guestItems.map(async (item) => {
+                        try {
+                            const data = await request(
+                                `/api/admin/products/${encodeURIComponent(item.productId)}`
+                            );
+
+                            const product =
+                                data.product ||
+                                data.data?.product ||
+                                data.data ||
+                                data;
+
+                            return normalizeCartItem({
+                                productId: product,
+                                variant: item.variant,
+                                quantity: item.quantity,
+                            });
+                        } catch (productError) {
+                            console.error(
+                                `Unable to load product ${item.productId}:`,
+                                productError
+                            );
+
+                            return null;
+                        }
+                    })
+                );
+
+                setItems(resolved.filter(Boolean));
+
+            }
+        } catch (loadError) {
+            console.error("Cart loading error:", loadError);
+            setError(loadError.message || "Unable to load your cart.");
+        } finally {
+            setLoading(false);
+        }
+    }, [request]);
+
+    useEffect(() => {
+        loadCart();
+    }, [loadCart]);
+
+    const subtotal = useMemo(
+        () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+        [items]
+    );
+
+    const originalTotal = useMemo(() =>
+        items.reduce((sum, item) => sum + item.oldPrice * item.quantity, 0),
+        [items]);
+
+    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+    const productDiscount = Math.max(0, originalTotal - subtotal);
+    const couponDiscount = appliedCoupon ? Math.round(subtotal * 0.1) : 0;
+    const shipping = subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 99;
+    const total = Math.max(0, subtotal - couponDiscount + shipping);
+
+    const persistGuestItems = (nextItems) => {
+        const success = saveGuestCart(
+            nextItems.map((item) => ({
+                productId: item.productId,
+                quantity: item.quantity,
+                variant: item.variant,
+            }))
+        );
+
+        if (!success) {
+            setError("Unable to save your cart in this browser.");
+        }
+
+        return success;
+    };
+
+    const updateQuantity = async (item, change) => {
+        const nextQuantity = item.quantity + change;
+
+        if (nextQuantity < 1 || nextQuantity > MAX_QUANTITY) return;
+
+        const key = `${item.productId}:${item.variant}`;
+        setBusyKey(key);
+        setError("");
+
+        const nextItems = items.map((current) =>
+            current.productId === item.productId &&
+                current.variant === item.variant
+                ? { ...current, quantity: nextQuantity }
+                : current
+        );
+
+        // Optimistic update for a responsive UI.
+        setItems(nextItems);
+
+        try {
+            if (isAuthenticated) {
+                await request("/api/user/cart", {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        productId: item.productId,
+                        quantity: nextQuantity,
+                        variant: item.variant,
+                    }),
+                });
+            } else {
+                const result = updateGuestCartQuantity(
+                    item.productId,
+                    nextQuantity,
+                    item.variant
+                );
+
+                if (!result.success) throw new Error("Unable to update guest cart.");
+            }
+        } catch (updateError) {
+            setError(updateError.message || "Unable to update quantity.");
+            await loadCart();
+        } finally {
+            setBusyKey("");
+        }
+    };
+
+    const removeItem = async (item) => {
+        const key = `${item.productId}:${item.variant}`;
+
+        if (busyKey) return;
+
+        setBusyKey(key);
+        setError("");
+
+        try {
+            if (isAuthenticated) {
+                await request("/api/user/cart", {
+                    method: "DELETE",
+                    body: JSON.stringify({
+                        productId: item.productId,
+                        variant: item.variant || "",
+                    }),
+                });
+            } else {
+                const result = removeFromGuestCart(
+                    item.productId,
+                    item.variant || ""
+                );
+
+                if (result?.success === false) {
+                    throw new Error("Unable to remove this item from your cart.");
+                }
+            }
+
+            setItems((prev) =>
+                prev.filter(
+                    (cartItem) =>
+                        !(
+                            String(cartItem.productId) === String(item.productId) &&
+                            String(cartItem.variant || "").toLowerCase() ===
+                            String(item.variant || "").toLowerCase()
+                        )
+                )
+            );
+        } catch (error) {
+            console.error("Remove cart item error:", error);
+            setError(error.message || "Unable to remove this item.");
+            await loadCart();
+        } finally {
+            setBusyKey("");
+        }
+    };
+
+    const applyCoupon = (event) => {
+        event.preventDefault();
+
+        if (coupon.trim().toUpperCase() === "WELCOME10") {
             setAppliedCoupon(true);
             setCouponMessage("WELCOME10 applied — you saved 10%!");
-        } else if (value === "WELCOME10" && appliedCoupon) {
-            setCouponMessage("This coupon is already applied.");
         } else {
             setCouponMessage("Invalid coupon code. Try WELCOME10.");
         }
     };
 
+    if (loading) {
+        return (
+            <main className="flex min-h-[65vh] items-center justify-center bg-[#F7F2FC] px-4">
+                <div className="flex items-center gap-3 text-[#7D45C2]">
+                    <LoaderCircle className="animate-spin" size={25} />
+                    <span className="font-medium">Loading your cart...</span>
+                </div>
+            </main>
+        );
+    }
+
     return (
         <main className="min-h-screen bg-[#F7F2FC] px-4 py-8 sm:px-6 lg:px-10 lg:py-12">
             <div className="mx-auto max-w-7xl">
-                {/* Breadcrumb */}
                 <div className="mb-7 flex items-center gap-2 text-sm text-gray-500">
                     <Link href="/" className="transition hover:text-[#7D45C2]">
                         Home
@@ -125,7 +424,6 @@ export default function Cart() {
                     <span className="font-medium text-gray-900">Shopping Cart</span>
                 </div>
 
-                {/* Page heading */}
                 <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                     <div>
                         <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-[#7D45C2]">
@@ -151,6 +449,22 @@ export default function Cart() {
                     </Link>
                 </div>
 
+                {error && (
+                    <div
+                        role="alert"
+                        className="mb-5 flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+                    >
+                        <span>{error}</span>
+                        <button
+                            type="button"
+                            onClick={loadCart}
+                            className="shrink-0 font-semibold underline"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
+
                 {items.length === 0 ? (
                     <div className="rounded-3xl border border-[#E9DDF5] bg-white px-6 py-16 text-center shadow-sm sm:py-24">
                         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#F1E8FA] text-[#7D45C2]">
@@ -160,8 +474,8 @@ export default function Cart() {
                             Your cart is empty
                         </h2>
                         <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-gray-500">
-                            Looks like you haven't added anything to your cart
-                            yet. Explore our collection and find something you love.
+                            You haven&apos;t added anything to your cart yet. Explore our
+                            collection and find something you love.
                         </p>
                         <Link
                             href="/our-products"
@@ -173,125 +487,137 @@ export default function Cart() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 items-start gap-7 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_410px]">
-                        {/* Cart items */}
                         <section className="space-y-5">
                             <div className="overflow-hidden rounded-3xl border border-[#E9DDF5] bg-white shadow-sm">
                                 <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 sm:px-7">
-                                    <h2 className="font-bold text-gray-900">
-                                        Cart Items
-                                    </h2>
+                                    <h2 className="font-bold text-gray-900">Cart Items</h2>
                                     <span className="text-xs text-gray-400">
-                                        Prices include applicable taxes
+                                        Prices may be updated at checkout
                                     </span>
                                 </div>
 
                                 <div className="divide-y divide-gray-100 px-4 sm:px-7">
-                                    {items.map((item) => (
-                                        <article
-                                            key={item.id}
-                                            className="flex flex-col gap-4 py-6 sm:flex-row sm:gap-6"
-                                        >
-                                            {/* Product image */}
-                                            <Link
-                                                href="/our-products"
-                                                className="relative block aspect-[4/3] w-full shrink-0 overflow-hidden rounded-2xl bg-[#F7F2FC] sm:aspect-square sm:w-36"
-                                            >
-                                                <Image
-                                                    src={item.image}
-                                                    alt={item.name}
-                                                    fill
-                                                    sizes="(max-width: 640px) 100vw, 144px"
-                                                    className="object-contain p-3 transition duration-500 hover:scale-105"
-                                                />
-                                                <span className="absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-[#7D45C2] shadow-sm">
-                                                    SALE
-                                                </span>
-                                            </Link>
+                                    {items.map((item, index) => {
+                                        const key = `${item.productId}:${item.variant}:${index}`;
+                                        const busy = busyKey === `${item.productId}:${item.variant}`;
+                                        const productHref = item.slug
+                                            ? `/our-products/${item.slug}`
+                                            : "/our-products";
 
-                                            {/* Product details */}
-                                            <div className="flex min-w-0 flex-1 flex-col justify-between gap-4">
-                                                <div>
-                                                    <div className="flex items-start justify-between gap-3">
-                                                        <div>
-                                                            <Link
-                                                                href="/our-products"
-                                                                className="text-base font-bold text-gray-900 transition hover:text-[#7D45C2] sm:text-lg"
+                                        return (
+                                            <article
+                                                key={key}
+                                                className="flex flex-col gap-4 py-6 sm:flex-row sm:gap-6"
+                                            >
+                                                <Link
+                                                    href={productHref}
+                                                    className="relative flex aspect-[4/3] w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#F7F2FC] sm:aspect-square sm:w-36"
+                                                >
+                                                    <img
+                                                        src={item.image}
+                                                        alt={item.name}
+                                                        className="h-full w-full object-contain p-3 transition duration-500 hover:scale-105"
+                                                    />
+                                                </Link>
+
+                                                <div className="flex min-w-0 flex-1 flex-col justify-between gap-4">
+                                                    <div>
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div>
+                                                                <Link
+                                                                    href={productHref}
+                                                                    className="text-base font-bold text-gray-900 transition hover:text-[#7D45C2] sm:text-lg"
+                                                                >
+                                                                    {item.name}
+                                                                </Link>
+                                                                {item.variant && (
+                                                                    <p className="mt-1.5 text-xs text-gray-500 sm:text-sm">
+                                                                        {item.variant}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeItem(item)}
+                                                                disabled={busy}
+                                                                aria-label={`Remove ${item.name}`}
+                                                                className="rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
                                                             >
-                                                                {item.name}
-                                                            </Link>
-                                                            <p className="mt-1.5 text-xs text-gray-500 sm:text-sm">
-                                                                {item.variant}
-                                                            </p>
+                                                                <Trash2 size={18} />
+                                                            </button>
                                                         </div>
 
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeItem(item.id)}
-                                                            aria-label={`Remove ${item.name}`}
-                                                            className="rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
-                                                        >
-                                                            <Trash2 size={18} />
-                                                        </button>
+                                                        <div className="mt-3 flex items-center gap-2">
+                                                            <span
+                                                                className={`flex items-center gap-1.5 text-xs font-medium ${item.inStock
+                                                                    ? "text-emerald-600"
+                                                                    : "text-red-500"
+                                                                    }`}
+                                                            >
+                                                                <span
+                                                                    className={`h-1.5 w-1.5 rounded-full ${item.inStock
+                                                                        ? "bg-emerald-500"
+                                                                        : "bg-red-500"
+                                                                        }`}
+                                                                />
+                                                                {item.inStock ? "Available" : "Check availability"}
+                                                            </span>
+
+                                                            <span className="text-gray-300">|</span>
+
+                                                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-400">
+                                                                <Heart size={14} />
+                                                                Save for later (coming soon)
+                                                            </span>
+                                                        </div>
                                                     </div>
 
-                                                    <div className="mt-3 flex items-center gap-2">
-                                                        <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600">
-                                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                                            In stock
-                                                        </span>
-                                                        <span className="text-gray-300">|</span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                // UI only
-                                                            }}
-                                                            className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 transition hover:text-[#7D45C2]"
-                                                        >
-                                                            <Heart size={14} />
-                                                            Save for later
-                                                        </button>
+                                                    <div className="flex flex-wrap items-end justify-between gap-4">
+                                                        <div className="inline-flex items-center rounded-xl border border-gray-200">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => updateQuantity(item, -1)}
+                                                                disabled={busy || item.quantity <= 1}
+                                                                aria-label="Decrease quantity"
+                                                                className="flex h-10 w-10 items-center justify-center text-gray-600 transition hover:text-[#7D45C2] disabled:cursor-not-allowed disabled:opacity-30"
+                                                            >
+                                                                <Minus size={15} />
+                                                            </button>
+                                                            <span className="min-w-9 text-center text-sm font-semibold text-gray-900">
+                                                                {item.quantity}
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => updateQuantity(item, 1)}
+                                                                disabled={busy || item.quantity >= MAX_QUANTITY}
+                                                                aria-label="Increase quantity"
+                                                                className="flex h-10 w-10 items-center justify-center text-gray-600 transition hover:text-[#7D45C2] disabled:cursor-not-allowed disabled:opacity-30"
+                                                            >
+                                                                <Plus size={15} />
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="text-right">
+                                                            <p className="text-lg font-bold text-gray-950">
+                                                                {formatPrice(item.price * item.quantity)}
+                                                            </p>
+                                                            {item.oldPrice > item.price && (
+                                                                <p className="mt-1 text-xs text-gray-400 line-through">
+                                                                    {formatPrice(item.oldPrice * item.quantity)}
+                                                                </p>
+                                                            )}
+                                                            {busy && (
+                                                                <p className="mt-1 text-xs text-[#7D45C2]">
+                                                                    Updating...
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
-
-                                                <div className="flex flex-wrap items-end justify-between gap-4">
-                                                    {/* Quantity */}
-                                                    <div className="inline-flex items-center rounded-xl border border-gray-200">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => updateQuantity(item.id, -1)}
-                                                            disabled={item.quantity <= 1}
-                                                            aria-label="Decrease quantity"
-                                                            className="flex h-10 w-10 items-center justify-center text-gray-600 transition hover:text-[#7D45C2] disabled:cursor-not-allowed disabled:opacity-30"
-                                                        >
-                                                            <Minus size={15} />
-                                                        </button>
-                                                        <span className="min-w-9 text-center text-sm font-semibold text-gray-900">
-                                                            {item.quantity}
-                                                        </span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => updateQuantity(item.id, 1)}
-                                                            disabled={item.quantity >= 10}
-                                                            aria-label="Increase quantity"
-                                                            className="flex h-10 w-10 items-center justify-center text-gray-600 transition hover:text-[#7D45C2] disabled:cursor-not-allowed disabled:opacity-30"
-                                                        >
-                                                            <Plus size={15} />
-                                                        </button>
-                                                    </div>
-
-                                                    {/* Price */}
-                                                    <div className="text-right">
-                                                        <p className="text-lg font-bold text-gray-950">
-                                                            {formatPrice(item.price * item.quantity)}
-                                                        </p>
-                                                        <p className="mt-1 text-xs text-gray-400 line-through">
-                                                            {formatPrice(item.oldPrice * item.quantity)}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </article>
-                                    ))}
+                                            </article>
+                                        );
+                                    })}
                                 </div>
 
                                 <div className="border-t border-gray-100 bg-gray-50/70 px-5 py-4 sm:px-7">
@@ -305,38 +631,40 @@ export default function Cart() {
                                 </div>
                             </div>
 
-                            {/* Delivery information */}
                             <div className="flex items-start gap-4 rounded-3xl border border-[#E9DDF5] bg-white p-5 shadow-sm sm:p-6">
                                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#F1E8FA] text-[#7D45C2]">
                                     <Truck size={23} />
                                 </div>
-                                <div>
+                                <div className="flex-1">
                                     <h3 className="font-bold text-gray-900">
                                         Complimentary shipping
                                     </h3>
                                     <p className="mt-1 text-sm leading-6 text-gray-500">
-                                        Enjoy free shipping on eligible orders.
-                                        Final delivery charges and estimated dates
-                                        will be confirmed at checkout.
+                                        Final delivery charges and estimated dates will be
+                                        confirmed at checkout.
                                     </p>
                                     <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-gray-100">
                                         <div
                                             className="h-full rounded-full bg-[#7D45C2] transition-all"
                                             style={{
-                                                width: `${Math.min((subtotal / 1999) * 100, 100)}%`,
+                                                width: `${Math.min(
+                                                    (subtotal / FREE_SHIPPING_THRESHOLD) * 100,
+                                                    100
+                                                )}%`,
                                             }}
                                         />
                                     </div>
                                     <p className="mt-2 text-xs font-medium text-gray-500">
-                                        {subtotal >= 1999
+                                        {subtotal >= FREE_SHIPPING_THRESHOLD
                                             ? "You've unlocked free shipping!"
-                                            : `Add ${formatPrice(1999 - subtotal)} more for free shipping.`}
+                                            : `Add ${formatPrice(
+                                                FREE_SHIPPING_THRESHOLD - subtotal
+                                            )} more for free shipping.`}
                                     </p>
                                 </div>
                             </div>
                         </section>
 
-                        {/* Order summary */}
                         <aside className="lg:sticky lg:top-6">
                             <div className="overflow-hidden rounded-3xl border border-[#E9DDF5] bg-white shadow-sm">
                                 <div className="border-b border-gray-100 px-6 py-5 sm:px-7">
@@ -349,11 +677,13 @@ export default function Cart() {
                                 </div>
 
                                 <div className="space-y-4 px-6 py-6 sm:px-7">
-                                    {/* Coupon */}
-                                    <form onSubmit={applyCoupon}>
+                                    <form
+                                        onSubmit={applyCoupon}
+                                        className="space-y-2"
+                                    >
                                         <label
                                             htmlFor="coupon"
-                                            className="mb-2 block text-sm font-semibold text-gray-800"
+                                            className="block text-sm font-semibold text-gray-800"
                                         >
                                             Have a coupon?
                                         </label>
@@ -366,8 +696,8 @@ export default function Cart() {
                                                 <input
                                                     id="coupon"
                                                     value={coupon}
-                                                    onChange={(e) => {
-                                                        setCoupon(e.target.value);
+                                                    onChange={(event) => {
+                                                        setCoupon(event.target.value);
                                                         setCouponMessage("");
                                                     }}
                                                     placeholder="Enter code"
@@ -385,16 +715,14 @@ export default function Cart() {
                                         </div>
                                         {couponMessage && (
                                             <p
-                                                className={`mt-2 text-xs ${appliedCoupon
-                                                        ? "text-emerald-600"
-                                                        : "text-red-500"
+                                                className={`text-xs ${appliedCoupon ? "text-emerald-600" : "text-red-500"
                                                     }`}
                                             >
                                                 {couponMessage}
                                             </p>
                                         )}
                                         {!appliedCoupon && (
-                                            <p className="mt-2 text-xs text-gray-400">
+                                            <p className="text-xs text-gray-400">
                                                 Demo code: WELCOME10
                                             </p>
                                         )}
@@ -402,7 +730,6 @@ export default function Cart() {
 
                                     <div className="my-5 border-t border-dashed border-gray-200" />
 
-                                    {/* Price breakdown */}
                                     <div className="space-y-4 text-sm">
                                         <div className="flex items-center justify-between gap-3">
                                             <span className="text-gray-500">
@@ -414,11 +741,9 @@ export default function Cart() {
                                         </div>
 
                                         <div className="flex items-center justify-between gap-3">
-                                            <span className="text-gray-500">
-                                                Product discount
-                                            </span>
+                                            <span className="text-gray-500">Product discount</span>
                                             <span className="font-semibold text-emerald-600">
-                                                -{formatPrice(discount)}
+                                                -{formatPrice(productDiscount)}
                                             </span>
                                         </div>
 
@@ -435,18 +760,12 @@ export default function Cart() {
                                         )}
 
                                         <div className="flex items-center justify-between gap-3">
-                                            <span className="text-gray-500">
-                                                Shipping
-                                            </span>
+                                            <span className="text-gray-500">Shipping</span>
                                             <span
-                                                className={`font-semibold ${shipping === 0
-                                                        ? "text-emerald-600"
-                                                        : "text-gray-900"
+                                                className={`font-semibold ${shipping === 0 ? "text-emerald-600" : "text-gray-900"
                                                     }`}
                                             >
-                                                {shipping === 0
-                                                    ? "FREE"
-                                                    : formatPrice(shipping)}
+                                                {shipping === 0 ? "FREE" : formatPrice(shipping)}
                                             </span>
                                         </div>
                                     </div>
@@ -454,11 +773,9 @@ export default function Cart() {
                                     <div className="border-t border-gray-100 pt-5">
                                         <div className="flex items-end justify-between gap-3">
                                             <div>
-                                                <p className="font-bold text-gray-950">
-                                                    Total Amount
-                                                </p>
+                                                <p className="font-bold text-gray-950">Total Amount</p>
                                                 <p className="mt-1 text-xs text-gray-400">
-                                                    Inclusive of applicable taxes
+                                                    Estimated total
                                                 </p>
                                             </div>
                                             <p className="text-2xl font-bold tracking-tight text-gray-950">
@@ -469,10 +786,11 @@ export default function Cart() {
 
                                     <button
                                         type="button"
+                                        disabled={items.length === 0 || items.some((item) => !item.inStock)}
                                         onClick={() => {
-                                            // Checkout is not connected yet.
+                                            window.location.href = "/checkout";
                                         }}
-                                        className="group flex w-full items-center justify-center gap-2 rounded-xl bg-[#7D45C2] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#6937AA]"
+                                        className="group flex w-full items-center justify-center gap-2 rounded-xl bg-[#7D45C2] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#6937AA] disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         Proceed to Checkout
                                         <ArrowRight
@@ -488,29 +806,25 @@ export default function Cart() {
                                 </div>
                             </div>
 
-                            {/* Payment methods placeholder */}
                             <div className="mt-4 rounded-2xl border border-[#E9DDF5] bg-white p-4 text-center">
                                 <p className="text-xs font-medium text-gray-500">
                                     Secure payment options available at checkout
                                 </p>
                                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                                    {["UPI", "VISA", "Mastercard", "COD"].map(
-                                        (method) => (
-                                            <span
-                                                key={method}
-                                                className="rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-[10px] font-bold tracking-wide text-gray-600"
-                                            >
-                                                {method}
-                                            </span>
-                                        )
-                                    )}
+                                    {["UPI", "VISA", "Mastercard", "COD"].map((method) => (
+                                        <span
+                                            key={method}
+                                            className="rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-[10px] font-bold tracking-wide text-gray-600"
+                                        >
+                                            {method}
+                                        </span>
+                                    ))}
                                 </div>
                             </div>
                         </aside>
                     </div>
                 )}
 
-                {/* Bottom reassurance */}
                 <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 border-t border-[#E9DDF5] pt-7 text-xs font-medium text-gray-500 sm:text-sm">
                     <span className="flex items-center gap-2">
                         <LockKeyhole size={16} className="text-[#7D45C2]" />

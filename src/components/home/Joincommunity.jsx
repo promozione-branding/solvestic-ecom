@@ -105,34 +105,6 @@ export default function Joincommunity() {
                     </div>
                 </motion.div>
             </section>
-
-            
         </footer>
-    );
-}
-
-function FooterColumn({ title, links }) {
-    return (
-        <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-        >
-            <h3 className="text-lg font-semibold">{title}</h3>
-
-            <ul className="mt-2 space-y-3">
-                {links.map((link) => (
-                    <li key={link.label}>
-                        <Link
-                            href={link.href}
-                            className="inline-flex items-center gap-1 text-sm text-[#403f41] transition hover:translate-x-1 hover:text-[#7D45C2]"
-                        >
-                            {link.label}
-                        </Link>
-                    </li>
-                ))}
-            </ul>
-        </motion.div>
     );
 }

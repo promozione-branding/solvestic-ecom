@@ -17,14 +17,13 @@ function generateSlug(value) {
 }
 
 export async function GET(request) {
-    const authError = requireAdmin(request);
-    if (authError) return authError;
+    // const authError = requireAdmin(request);
+    // if (authError) return authError;
 
     try {
         await connectDB();
 
         const categories = await Category.find()
-            .sort({ createdAt: -1 })
             .lean();
 
         return NextResponse.json({

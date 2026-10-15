@@ -866,7 +866,7 @@ export default function AddProductPage() {
                                     <div className="overflow-hidden rounded-xl border border-gray-200">
                                         <JoditEditor
                                             value={longDescription}
-                                            config={editorConfig}
+                                            // config={editorConfig}
                                             onBlur={(newContent) =>
                                                 setLongDescription(newContent)
                                             }

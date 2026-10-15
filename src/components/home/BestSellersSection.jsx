@@ -1,274 +1,299 @@
-
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-    ArrowLeft,
-    ArrowRight,
-    ArrowUpRight,
-    Check,
-    Heart,
-    ShoppingBag,
-    Star,
-    Sparkles,
-    SlidersHorizontal,
-} from "lucide-react";
+import { Heart, ShoppingBag, Star } from "lucide-react";
+import { addToWishlist } from "@/lib/wishlist-storage";
 
-const categories = [
-    {
-        name: "All Products",
-        image:
-            "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?auto=format&fit=crop&w=300&q=85",
-    },
-    {
-        name: "Sunscreen",
-        image:
-            "https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=300&q=85",
-    },
-    {
-        name: "Signature Range",
-        image:
-            "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=300&q=85",
-    },
-    {
-        name: "Skin Care",
-        image:
-            "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?auto=format&fit=crop&w=300&q=85",
-    },
-    {
-        name: "Bath & Body",
-        image:
-            "https://images.unsplash.com/photo-1600428853876-fb5a850b444f?auto=format&fit=crop&w=300&q=85",
-    },
-    {
-        name: "Lip Care",
-        image:
-            "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=300&q=85",
-    },
-];
-
-const products = [
-    {
-        id: 1,
-        name: "Bath & Body Gift Set",
-        category: "Bath & Body",
-        price: 712,
-        oldPrice: 950,
-        rating: 4.9,
-        reviews: 128,
-        badge: "BESTSELLER",
-        description: "A little luxury for your everyday ritual.",
-        image: "/products/1.png",
-        bg: "#eeebf8",
-        type: "best",
-    },
-    {
-        id: 2,
-        name: "10 Min De-Stress Kit",
-        category: "Skin Care",
-        price: 999,
-        oldPrice: 1300,
-        rating: 4.9,
-        reviews: 96,
-        badge: "MOST LOVED",
-        description: "Your little reset after a long day.",
-        image: "/products/2.png",
-        bg: "#e4f1f1",
-        type: "best",
-    },
-    {
-        id: 3,
-        name: "Lips Don't Lie Lip Duo",
-        category: "Lip Care",
-        price: 799,
-        oldPrice: 1100,
-        rating: 5.0,
-        reviews: 84,
-        badge: "LIP ESSENTIALS",
-        description: "Soft lips. Beautiful colour. All day.",
-        image: "/products/3.png",
-        bg: "#f8e8ee",
-        type: "best",
-    },
-    {
-        id: 4,
-        name: "Calming Gel Pen",
-        category: "Skin Care",
-        price: 600,
-        oldPrice: 800,
-        rating: 4.9,
-        reviews: 73,
-        badge: "DAILY FAVOURITE",
-        description: "A refreshing boost for tired skin.",
-        image: "/products/4.png",
-        bg: "#e9eaf9",
-        type: "best",
-    },
-    {
-        id: 5,
-        name: "Hydra Crème 30ML",
-        category: "Skin Care",
-        price: 600,
-        oldPrice: 800,
-        rating: 4.8,
-        reviews: 115,
-        badge: "HYDRATION HERO",
-        description: "Deep hydration for a dewy finish.",
-        image: "/products/1.png",
-        bg: "#e9e9fb",
-        type: "best",
-    },
-    {
-        id: 6,
-        name: "Daily Glow Sunscreen",
-        category: "Sunscreen",
-        price: 699,
-        oldPrice: 899,
-        rating: 4.9,
-        reviews: 42,
-        badge: "JUST DROPPED",
-        description: "Lightweight daily sun protection.",
-        image: "/products/2.png",
-        bg: "#f5eddb",
-        type: "new",
-    },
-    {
-        id: 7,
-        name: "Signature Skin Serum",
-        category: "Signature Range",
-        price: 1099,
-        oldPrice: 1399,
-        rating: 5.0,
-        reviews: 31,
-        badge: "NEW ARRIVAL",
-        description: "Your glow, elevated with every drop.",
-        image: "/products/3.png",
-        bg: "#e8e8f6",
-        type: "new",
-    },
-    {
-        id: 8,
-        name: "Velvet Lip Treatment",
-        category: "Lip Care",
-        price: 499,
-        oldPrice: 650,
-        rating: 4.8,
-        reviews: 24,
-        badge: "NEW ARRIVAL",
-        description: "Comforting care for softer lips.",
-        image: "/products/4.png",
-        bg: "#f8e5e9",
-        type: "new",
-    },
-];
+const DEFAULT_IMAGE =
+    "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?auto=format&fit=crop&w=500&q=85";
 
 const formatPrice = (price) =>
     new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
         maximumFractionDigits: 0,
-    }).format(price);
+    }).format(Number(price) || 0);
 
-const getDiscount = (price, oldPrice) =>
-    Math.round(((oldPrice - price) / oldPrice) * 100);
+const getList = (data, key) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.[key])) return data[key];
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data?.results)) return data.results;
+    return [];
+};
+
+const getProductCategory = (product) => {
+    const category = product.category || product.categoryId;
+
+    if (category && typeof category === "object") {
+        return {
+            id: String(category._id || category.id || ""),
+            name: category.name || category.title || "",
+        };
+    }
+
+    return {
+        id: String(category || ""),
+        name: product.categoryName || "",
+    };
+};
+
+const getProductImage = (product) => {
+    const images = Array.isArray(product.images) ? product.images : [];
+
+    return (
+        product.imageUrl ||
+        product.thumbnail ||
+        product.image ||
+        images[0]?.url ||
+        images[0]?.imageUrl ||
+        (typeof images[0] === "string" ? images[0] : "") ||
+        DEFAULT_IMAGE
+    );
+};
 
 const containerVariants = {
     hidden: {},
     visible: {
-        transition: {
-            staggerChildren: 0.09,
-        },
+        transition: { staggerChildren: 0.08 },
     },
 };
 
 const cardVariants = {
-    hidden: { opacity: 0, y: 28 },
-    viewport: { once: false, amount: 0.3 },
+    hidden: { opacity: 0, y: 24 },
     visible: {
         opacity: 1,
         y: 0,
-        transition: { duration: 0.5, ease: "easeOut" },
+        transition: { duration: 0.45, ease: "easeOut" },
     },
 };
 
 export default function BestSellersSection({ onAddToCart }) {
-    const [activeTab, setActiveTab] = useState("best");
-    const [activeCategory, setActiveCategory] = useState("All Products");
+    const [categories, setCategories] = useState([]);
+    const [products, setProducts] = useState([]);
+    const [activeCategory, setActiveCategory] = useState("all");
     const [wishlist, setWishlist] = useState([]);
-    const [cart, setCart] = useState([]);
     const [addedProduct, setAddedProduct] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                setError("");
+
+                const params = { limit: 1000 };
+
+                const [categoryResponse, productResponse] =
+                    await Promise.all([
+                        axios.get("/api/admin/categories"),
+                        axios.get("/api/admin/products", { params }),
+                    ]);
+
+                const categoryData = getList(
+                    categoryResponse.data,
+                    "categories"
+                );
+
+                const productData = getList(
+                    productResponse.data,
+                    "products"
+                );
+
+                if (cancelled) return;
+
+                setCategories(categoryData);
+
+                setProducts(
+                    productData.map((product) => {
+                        const category = getProductCategory(product);
+
+                        const price = Number(
+                            product.sellingPrice ??
+                            product.salePrice ??
+                            product.discountPrice ??
+                            product.price ??
+                            0
+                        );
+
+                        const oldPrice = Number(
+                            product.originalPrice ??
+                            product.compareAtPrice ??
+                            product.mrp ??
+                            product.regularPrice ??
+                            price
+                        );
+
+                        return {
+                            ...product,
+                            id: String(product._id || product.id),
+                            name:
+                                product.name ||
+                                product.title ||
+                                "Untitled Product",
+                            categoryId: category.id,
+                            categoryName: category.name,
+                            price,
+                            oldPrice,
+                            image: getProductImage(product),
+                            rating: Number(product.rating || 0),
+                            reviews: Number(
+                                product.reviews ||
+                                product.reviewCount ||
+                                0
+                            ),
+                        };
+                    })
+                );
+            } catch (err) {
+                console.error("Failed to load categories/products:", err);
+
+                if (!cancelled) {
+                    setError(
+                        err.response?.data?.message ||
+                        "Unable to load products. Please try again."
+                    );
+                }
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        };
+
+        fetchData();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const allCategories = useMemo(
+        () => [
+            {
+                _id: "all",
+                name: "All Products",
+                image: DEFAULT_IMAGE,
+            },
+            ...categories,
+        ],
+        [categories]
+    );
 
     const filteredProducts = useMemo(() => {
-        return products.filter((product) => {
-            const matchesTab = product.type === activeTab;
-            const matchesCategory =
-                activeCategory === "All Products" ||
-                product.category === activeCategory;
+        if (activeCategory === "all") return products;
 
-            return matchesTab && matchesCategory;
-        });
-    }, [activeTab, activeCategory]);
-
-    const toggleWishlist = (id) => {
-        setWishlist((prev) =>
-            prev.includes(id)
-                ? prev.filter((item) => item !== id)
-                : [...prev, id]
+        const selectedCategory = categories.find(
+            (category) =>
+                String(category._id || category.id) === activeCategory
         );
+
+        if (!selectedCategory) return [];
+
+        const selectedId = String(
+            selectedCategory._id || selectedCategory.id
+        );
+
+        const selectedName = selectedCategory.name || selectedCategory.title;
+
+        return products.filter((product) => {
+            return (
+                product.categoryId === selectedId ||
+                product.categoryName === selectedName
+            );
+        });
+    }, [products, categories, activeCategory]);
+
+    const [wishlistIds, setWishlistIds] = useState([]);
+
+    useEffect(() => {
+        try {
+            const saved = JSON.parse(
+                localStorage.getItem("solvestic_wishlist") || "[]"
+            );
+
+            setWishlistIds(
+                saved.map((item) =>
+                    String(item._id || item.id || item.productId || item)
+                )
+            );
+        } catch {
+            setWishlistIds([]);
+        }
+    }, []);
+
+    const toggleWishlist = (product) => {
+        const id = String(product._id || product.id);
+        const key = "solvestic_wishlist";
+
+        try {
+            const saved = JSON.parse(localStorage.getItem(key) || "[]");
+
+            const exists = saved.some(
+                (item) =>
+                    String(item._id || item.id || item.productId || item) === id
+            );
+
+            const updated = exists
+                ? saved.filter(
+                    (item) =>
+                        String(item._id || item.id || item.productId || item) !== id
+                )
+                : [...saved, product];
+
+            localStorage.setItem(key, JSON.stringify(updated));
+            setWishlistIds(
+                updated.map((item) =>
+                    String(item._id || item.id || item.productId || item)
+                )
+            );
+        } catch (error) {
+            console.error("Unable to update wishlist:", error);
+        }
     };
 
     const addToCart = (product) => {
-        setCart((prev) => [...prev, product.id]);
         setAddedProduct(product.id);
         onAddToCart?.(product);
     };
 
-    const changeTab = (tab) => {
-        setActiveTab(tab);
-        setActiveCategory("All Products");
-        setAddedProduct(null);
-    };
+    console.log(filteredProducts)
 
     return (
         <section className="overflow-hidden bg-[#fbfaf8] py-10 text-[#252329] sm:py-12 lg:py-15">
             <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
-                {/* Section heading */}
-                {/* <motion.div
-                    initial={{ opacity: 0, y: 24 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.3 }}
-                    transition={{ duration: 0.65 }}
-                    className="mb-5 text-center"
-                >
-                    <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#dcd5ed] bg-white px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a83be] sm:text-xs">
-                        <Sparkles size={14} />
-                        Your skincare ritual
-                    </div>
-
-                    <h2 className="text-3xl font-medium tracking-[-0.055em] sm:text-5xl lg:text-6xl">
-                        A little love for{" "}
-                        <span className="font-serif italic text-[#918ac6]">
-                            your skin.
-                        </span>
-                    </h2>
-                </motion.div> */}
-
                 {/* Categories */}
-                <div className="mb-5">
-                    <div className="flex gap-5 overflow-x-auto py-3 sm:justify-center sm:gap-8 lg:gap-10 overflow-y-hidden">
-                        {categories.map((category, index) => {
-                            const active = activeCategory === category.name;
+                <div className="mb-8">
+                    <div className="flex gap-5 overflow-x-auto overflow-y-hidden py-3 sm:justify-center sm:gap-8 lg:gap-10">
+                        {allCategories.map((category, index) => {
+                            const categoryId =
+                                category._id === "all"
+                                    ? "all"
+                                    : String(category._id || category.id);
+
+                            const active = activeCategory === categoryId;
+
+                            const image =
+                                category.imageUrl ||
+                                category.image ||
+                                category.thumbnail ||
+                                DEFAULT_IMAGE;
 
                             return (
                                 <motion.button
-                                    key={category.name}
+                                    key={categoryId}
                                     type="button"
-                                    onClick={() => setActiveCategory(category.name)}
+                                    onClick={() => {
+                                        setActiveCategory(categoryId);
+                                        setAddedProduct(null);
+                                    }}
                                     initial={{ opacity: 0, y: 15 }}
                                     whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: false }}
-                                    transition={{ delay: index * 0.07 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: index * 0.04 }}
                                     whileHover={{ y: -4 }}
                                     className="group flex min-w-[86px] shrink-0 flex-col items-center gap-3 outline-none"
                                     aria-pressed={active}
@@ -280,22 +305,21 @@ export default function BestSellersSection({ onAddToCart }) {
                                             }`}
                                     >
                                         <img
-                                            src={category.image}
-                                            alt={category.name}
+                                            src={image}
+                                            alt={category.name || category.title}
                                             className="h-full w-full rounded-full object-cover transition-transform duration-500 group-hover:scale-110"
                                         />
-                                        {active && (
-                                            <span className="absolute inset-0 rounded-full border-2 border-white/70" />
-                                        )}
                                     </span>
 
                                     <span
-                                        className={`whitespace-nowrap text-[11px] transition-colors sm:text-sm ${active
+                                        className={`whitespace-nowrap text-[11px] sm:text-sm ${active
                                             ? "font-semibold text-[#837ab7]"
                                             : "text-[#55515b] group-hover:text-[#837ab7]"
                                             }`}
                                     >
-                                        {category.name}
+                                        {category.name ||
+                                            category.title ||
+                                            "Category"}
                                     </span>
                                 </motion.button>
                             );
@@ -303,58 +327,64 @@ export default function BestSellersSection({ onAddToCart }) {
                     </div>
                 </div>
 
-                {/* Tabs and product count */}
-                <div className="mb-5 flex flex-col items-center justify-between gap-5 sm:flex-row">
-                    <div className="inline-flex rounded-full border border-[#dcd6ef] bg-white p-1.5 shadow-sm">
-                        <button
-                            type="button"
-                            onClick={() => changeTab("best")}
-                            className={`rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-[0.12em] transition-all duration-300 sm:px-8 ${activeTab === "best"
-                                ? "bg-[#918ac6] text-white shadow-md"
-                                : "text-[#686371] hover:text-[#918ac6]"
-                                }`}
-                        >
-                            Best Sellers
-                        </button>
+                {/* Product count */}
+                <div className="mb-5 flex items-center justify-between">
+                    <h2 className="text-xl font-semibold sm:text-2xl">
+                        {activeCategory === "all"
+                            ? "All Products"
+                            : categories.find(
+                                (category) =>
+                                    String(category._id || category.id) ===
+                                    activeCategory
+                            )?.name || "Products"}
+                    </h2>
 
-                        <button
-                            type="button"
-                            onClick={() => changeTab("new")}
-                            className={`rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-[0.12em] transition-all duration-300 sm:px-8 ${activeTab === "new"
-                                ? "bg-[#918ac6] text-white shadow-md"
-                                : "text-[#686371] hover:text-[#918ac6]"
-                                }`}
-                        >
-                            New Launch
-                        </button>
-                    </div>
-
-                    <div className="flex items-center gap-3 text-xs text-[#85808a]">
-                        <SlidersHorizontal size={15} />
-                        <span>
-                            Showing{" "}
-                            <span className="font-semibold text-[#302d35]">
-                                {filteredProducts.length}
-                            </span>{" "}
-                            products
-                        </span>
-                    </div>
+                    <span className="text-xs text-[#85808a]">
+                        {filteredProducts.length} products
+                    </span>
                 </div>
 
                 {/* Products */}
-                <AnimatePresence mode="wait">
-                    {filteredProducts.length > 0 ? (
+                {loading ? (
+                    <div className="py-16 text-center text-sm text-[#85808a]">
+                        Loading categories and products...
+                    </div>
+                ) : error ? (
+                    <div className="rounded-3xl border border-dashed border-[#ded8eb] bg-white px-5 py-12 text-center">
+                        <p className="text-sm text-red-600">{error}</p>
+                        <button
+                            type="button"
+                            onClick={() => window.location.reload()}
+                            className="mt-4 rounded-full bg-[#918ac6] px-6 py-3 text-xs font-semibold text-white"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                ) : filteredProducts.length > 0 ? (
+                    <AnimatePresence mode="wait">
                         <motion.div
-                            key={`${activeTab}-${activeCategory}`}
+                            key={activeCategory}
                             variants={containerVariants}
                             initial="hidden"
                             animate="visible"
                             exit={{ opacity: 0, y: 10 }}
                             className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4"
                         >
-                            {filteredProducts.slice(0, 4).map((product) => {
-                                const isWishlisted = wishlist.includes(product.id);
+                            {filteredProducts.map((product) => {
+                                const isWishlisted = wishlistIds.includes(
+                                    String(product._id || product.id)
+                                );
                                 const isAdded = addedProduct === product.id;
+                                const discount =
+                                    product.oldPrice > product.price &&
+                                        product.oldPrice > 0
+                                        ? Math.round(
+                                            ((product.oldPrice -
+                                                product.price) /
+                                                product.oldPrice) *
+                                            100
+                                        )
+                                        : 0;
 
                                 return (
                                     <motion.article
@@ -363,11 +393,7 @@ export default function BestSellersSection({ onAddToCart }) {
                                         layout
                                         className="group relative flex min-w-0 flex-col overflow-hidden rounded-[22px] border border-[#eeeaf0] bg-white transition-shadow duration-500 hover:shadow-[0_18px_55px_rgba(44,35,65,0.09)]"
                                     >
-                                        {/* Product image */}
-                                        <div
-                                            className="relative m-2.5 overflow-hidden rounded-[16px] sm:m-3"
-                                            style={{ backgroundColor: product.bg }}
-                                        >
+                                        <div className="relative m-2.5 overflow-hidden rounded-[16px] bg-[#eeebf8] sm:m-3">
                                             <div className="relative aspect-[4/4.15] overflow-hidden">
                                                 <motion.img
                                                     src={product.image}
@@ -376,20 +402,22 @@ export default function BestSellersSection({ onAddToCart }) {
                                                     className="h-full w-full object-cover mix-blend-multiply transition-transform duration-700 ease-out group-hover:scale-105"
                                                 />
 
-                                                <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1.5 text-[9px] font-bold tracking-[0.12em] text-[#625b85] backdrop-blur-md">
-                                                    {product.category}
-                                                </span>
+                                                {product.categoryName && (
+                                                    <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1.5 text-[9px] font-bold tracking-[0.12em] text-[#625b85] backdrop-blur-md">
+                                                        {product.categoryName}
+                                                    </span>
+                                                )}
 
                                                 <button
                                                     type="button"
-                                                    onClick={() => toggleWishlist(product.id)}
+                                                    onClick={() => toggleWishlist(product)}
                                                     aria-label={
                                                         isWishlisted
                                                             ? "Remove from wishlist"
                                                             : "Add to wishlist"
                                                     }
                                                     aria-pressed={isWishlisted}
-                                                    className={`absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full backdrop-blur-md transition-all duration-300 ${isWishlisted
+                                                    className={`absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full backdrop-blur-md transition-all ${isWishlisted
                                                         ? "bg-[#918ac6] text-white"
                                                         : "bg-white/90 text-[#514c59] hover:bg-[#918ac6] hover:text-white"
                                                         }`}
@@ -400,94 +428,104 @@ export default function BestSellersSection({ onAddToCart }) {
                                                     />
                                                 </button>
 
-                                                <div className="absolute bottom-3 left-3 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-semibold text-[#514b63] backdrop-blur-md">
-                                                    {getDiscount(product.price, product.oldPrice)}% OFF
-                                                </div>
+                                                {discount > 0 && (
+                                                    <div className="absolute bottom-3 left-3 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-semibold text-[#514b63] backdrop-blur-md">
+                                                        {discount}% OFF
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
-                                        {/* Product details */}
                                         <div className="flex flex-1 flex-col px-4 pb-4 pt-1 sm:px-5 sm:pb-5">
-                                            <div className="mb-2 flex items-center justify-between gap-2">
-                                                <h3 className="text-base font-semibold tracking-[0.01em] text-[#29252f] transition-colors group-hover:text-[#8179b7] sm:text-xl">
+                                            <div className="mb-2 flex items-start justify-between gap-2">
+                                                <h3 className="text-base font-semibold text-[#29252f] transition-colors group-hover:text-[#8179b7] sm:text-xl">
                                                     {product.name}
                                                 </h3>
 
-                                                <span className="flex shrink-0 items-center gap-1 text-sm text-[#4e4955]">
-                                                    <Star
-                                                        size={13}
-                                                        fill="#e5bd53"
-                                                        stroke="#e5bd53"
-                                                    />
-                                                    {product.rating}
-                                                    <span className="text-[#aaa5af]">
-                                                        ({product.reviews})
+                                                {product.rating > 0 && (
+                                                    <span className="flex shrink-0 items-center gap-1 text-sm text-[#4e4955]">
+                                                        <Star
+                                                            size={13}
+                                                            fill="#e5bd53"
+                                                            stroke="#e5bd53"
+                                                        />
+                                                        {product.rating}
                                                     </span>
-                                                </span>
+                                                )}
                                             </div>
 
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <span className="text-lg font-bold tracking-tight text-[#29252f]">
-                                                    {formatPrice(product.price)}
+                                            <div className="flex mt-auto flex-wrap items-center gap-2">
+                                                <span className="text-lg font-bold text-[#29252f]">
+                                                    {formatPrice(product.variants[0].price)}
                                                 </span>
 
-                                                <span className="text-xs text-[#aaa5af] line-through">
-                                                    {formatPrice(product.oldPrice)}
-                                                </span>
+                                                {product.variants[0].oldPrice >
+                                                    product.variants[0].price && (
+                                                        <>
+                                                            <span className="text-xs text-[#aaa5af] line-through">
+                                                                {formatPrice(
+                                                                    product.variants[0].oldPrice
+                                                                )}
+                                                            </span>
 
-                                                <span className="ml-auto rounded-md bg-[#f2f0bd] px-2 py-1 text-[9px] font-bold text-[#625b32]">
-                                                    SAVE {formatPrice(product.oldPrice - product.price)}
-                                                </span>
+                                                            <span className="ml-auto rounded-md bg-[#f2f0bd] px-2 py-1 text-[9px] font-bold text-[#625b32]">
+                                                                SAVE{" "}
+                                                                {formatPrice(
+                                                                    product.variants[0].oldPrice -
+                                                                    product.variants[0].price
+                                                                )}
+                                                            </span>
+                                                        </>
+                                                    )}
                                             </div>
 
                                             <button
                                                 type="button"
                                                 onClick={() => addToCart(product)}
-                                                className={`mt-4 flex w-full items-center justify-center gap-2 rounded-full px-4 py-3.5 text-[11px] font-semibold uppercase tracking-[0.12em] transition-all duration-300 ${isAdded
+                                                className={`mt-4 flex w-full items-center justify-center gap-2 rounded-full px-4 py-3.5 text-[11px] font-semibold uppercase tracking-[0.12em] transition-all ${isAdded
                                                     ? "bg-[#dcebd7] text-[#3d653a]"
-                                                    : "bg-[#918ac6] text-white hover:bg-[#7770ad] hover:shadow-[0_8px_20px_rgba(145,138,198,0.25)]"
+                                                    : "bg-[#918ac6] text-white hover:bg-[#7770ad]"
                                                     }`}
                                             >
-                                                {isAdded ? (
-                                                    <>
-                                                        <Check size={16} />
-                                                        Added to Cart
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <ShoppingBag size={15} />
-                                                        Add to Cart
-                                                    </>
-                                                )}
+                                                <ShoppingBag size={15} />
+                                                {isAdded
+                                                    ? "Added to Cart"
+                                                    : "Add to Cart"}
                                             </button>
                                         </div>
                                     </motion.article>
                                 );
                             })}
                         </motion.div>
-                    ) : (
-                        <motion.div
-                            key="empty"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="flex min-h-[240px] flex-col items-center justify-center rounded-3xl border border-dashed border-[#ded8eb] bg-white px-5 text-center"
-                        >
-                            <ShoppingBag size={30} className="mb-3 text-[#918ac6]" />
-                            <h3 className="text-lg font-semibold">More goodness is coming</h3>
-                            <p className="mt-2 text-sm text-[#88828d]">
-                                No products in this category yet. Explore our other
-                                collections.
-                            </p>
+                    </AnimatePresence>
+                ) : (
+                    <div className="flex min-h-[280px] flex-col items-center justify-center rounded-3xl border border-dashed border-[#ded8eb] bg-white px-5 text-center">
+                        <ShoppingBag
+                            size={34}
+                            className="mb-4 text-[#918ac6]"
+                        />
+
+                        <h3 className="text-xl font-semibold text-[#302d35]">
+                            Coming Soon
+                        </h3>
+
+                        <p className="mt-2 max-w-md text-sm text-[#88828d]">
+                            {activeCategory === "all"
+                                ? "Our products are on their way. Please check back soon."
+                                : "No products are available in this category yet. New products are coming soon."}
+                        </p>
+
+                        {activeCategory !== "all" && (
                             <button
                                 type="button"
-                                onClick={() => setActiveCategory("All Products")}
-                                className="mt-5 rounded-full bg-[#918ac6] px-6 py-3 text-xs font-semibold text-white"
+                                onClick={() => setActiveCategory("all")}
+                                className="mt-5 rounded-full bg-[#918ac6] px-6 py-3 text-xs font-semibold text-white transition hover:bg-[#7770ad]"
                             >
-                                View all products
+                                View All Products
                             </button>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        )}
+                    </div>
+                )}
             </div>
         </section>
     );

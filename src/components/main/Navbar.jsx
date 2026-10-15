@@ -1,7 +1,10 @@
 
 "use client";
-
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
+import {
+    getGuestCartCount,
+    CART_UPDATED_EVENT,
+} from "@/lib/cart-storage";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -24,11 +27,11 @@ import {
 import { FaFacebook, FaInstagram } from "react-icons/fa";
 
 const categories = [
-    { name: "Shop All", href: "/our-products" },
-    { name: "Fragrance", href: "/our-products?category=fragrance" },
-    { name: "Body Care", href: "/our-products?category=body-care" },
-    { name: "Gift Sets", href: "/our-products?category=gift-sets" },
+    { name: "Shop", href: "/our-products" },
     { name: "Our Story", href: "/about-us" },
+    { name: "Our Philosophy", href: "/our-philosophy" },
+    { name: "Contact", href: "/contact-us" },
+    { name: "Newsletter", href: "/newsletter" },
 ];
 
 const BRAND = {
@@ -46,7 +49,6 @@ const ANNOUNCEMENTS = [
     "DERMATOLOGICALLY TESTED",
     "SULPHATE & PARABEN FREE",
     "CRUELTY-FREE BEAUTY",
-    "YOUR BEAUTY, YOUR RITUAL",
 ];
 
 function AnnouncementMarquee() {
@@ -90,17 +92,21 @@ function AnnouncementMarquee() {
 export default function Navbar() {
     const pathname = usePathname();
     const router = useRouter();
-
+    const [showTopBar, setShowTopBar] = useState(true);
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
-
     const searchInputRef = useRef(null);
     const { scrollY } = useScroll();
 
     useMotionValueEvent(scrollY, "change", (latest) => {
         setScrolled(latest > 20);
+    });
+
+    useMotionValueEvent(scrollY, "change", (latest) => {
+        setScrolled(latest > 20);
+        setShowTopBar(latest <= 10);
     });
 
     // Close open menus when navigating to another page.
@@ -173,6 +179,46 @@ export default function Navbar() {
         setSearchOpen(false);
     };
 
+    const [cartCount, setCartCount] = useState(0);
+
+    const refreshCartCount = useCallback(async () => {
+        // Immediately show the browser cart count.
+        setCartCount(getGuestCartCount());
+
+        try {
+            const response = await fetch("/api/user/cart", {
+                credentials: "include",
+                cache: "no-store",
+            });
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+
+            const count = (data.cart?.items || []).reduce(
+                (total, item) => total + (Number(item.quantity) || 0),
+                0
+            );
+
+            setCartCount(count);
+        } catch {
+            // Keep the guest cart count if the account request fails.
+        }
+    }, []);
+
+    useEffect(() => {
+        refreshCartCount();
+
+        window.addEventListener(CART_UPDATED_EVENT, refreshCartCount);
+
+        return () => {
+            window.removeEventListener(
+                CART_UPDATED_EVENT,
+                refreshCartCount
+            );
+        };
+    }, [refreshCartCount]);
+
     return (
         <motion.header
             initial={{ y: -30, opacity: 0 }}
@@ -181,11 +227,10 @@ export default function Navbar() {
                 duration: 0.55,
                 ease: [0.22, 1, 0.36, 1],
             }}
-            className={`sticky top-0 z-50 bg-white text-[#24202B] transition-shadow duration-300 ${
-                scrolled
-                    ? "shadow-[0_8px_30px_rgba(36,32,43,0.09)]"
-                    : ""
-            }`}
+            className={`sticky top-0 z-50 bg-white text-[#24202B] transition-shadow duration-300 ${scrolled
+                ? "shadow-[0_8px_30px_rgba(36,32,43,0.09)]"
+                : ""
+                }`}
         >
             <style>{`
                 .solvestic-marquee-track {
@@ -218,64 +263,76 @@ export default function Navbar() {
             {/* ================================================== */}
             {/* TOP BAR WITH MOVING ANNOUNCEMENTS */}
             {/* ================================================== */}
-
-            <div className="hidden border-b border-white/15 bg-[#7D45C2] text-white sm:block">
-                <div className="mx-auto flex h-10 max-w-[1600px] items-center justify-between gap-5 px-6 lg:px-10">
-
-                    {/* LEFT: SOCIAL ICONS */}
-
-                    <div className="flex shrink-0 items-center gap-4">
-                        <span className="mr-1 text-[9px] font-medium tracking-[0.2em] text-white/75">
-                            FOLLOW OUR JOURNEY
-                        </span>
-
-                        <motion.a
-                            whileHover={{ y: -2, scale: 1.08 }}
-                            href="https://www.instagram.com/"
-                            target="_blank"
-                            rel="noreferrer"
-                            aria-label="Instagram"
-                            className="transition-colors hover:text-[#F7F2FC]"
-                        >
-                            <FaInstagram size={14} />
-                        </motion.a>
-
-                        <motion.a
-                            whileHover={{ y: -2, scale: 1.08 }}
-                            href="https://www.facebook.com/"
-                            target="_blank"
-                            rel="noreferrer"
-                            aria-label="Facebook"
-                            className="transition-colors hover:text-[#F7F2FC]"
-                        >
-                            <FaFacebook size={14} />
-                        </motion.a>
-                    </div>
-
-                    {/* CENTER: SCROLLING ANNOUNCEMENTS */}
-
-                    <div className="min-w-0 flex-1 overflow-hidden">
-                        <AnnouncementMarquee />
-                    </div>
-
-                    {/* RIGHT: HELP AND SUPPORT */}
-
-                    <Link
-                        href="/contact"
-                        className="flex shrink-0 items-center gap-2 text-[9px] font-medium tracking-[0.14em] text-white/85 transition-colors hover:text-[#F7F2FC]"
+            <AnimatePresence initial={false}>
+                {showTopBar && (
+                    <motion.div
+                        key="announcement-bar"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{
+                            duration: 0.3,
+                            ease: [0.22, 1, 0.36, 1],
+                        }}
+                        className="hidden overflow-hidden sm:block"
                     >
-                        <Headphones size={13} />
-                        HELP & SUPPORT
-                    </Link>
-                </div>
-            </div>
+                        <div className="border-b border-white/15 bg-[#7D45C2] text-white">
+                            <div className="mx-auto flex h-10 max-w-[1600px] items-center justify-between gap-5 px-6 lg:px-10">
+
+                                {/* LEFT: SOCIAL ICONS */}
+                                <div className="flex shrink-0 items-center gap-4">
+                                    <span className="mr-1 text-[9px] font-medium tracking-[0.2em] text-white/75">
+                                        FOLLOW OUR JOURNEY
+                                    </span>
+
+                                    <motion.a
+                                        whileHover={{ y: -2, scale: 1.08 }}
+                                        href="https://www.instagram.com/"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        aria-label="Instagram"
+                                        className="transition-colors hover:text-[#F7F2FC]"
+                                    >
+                                        <FaInstagram size={14} />
+                                    </motion.a>
+
+                                    <motion.a
+                                        whileHover={{ y: -2, scale: 1.08 }}
+                                        href="https://www.facebook.com/"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        aria-label="Facebook"
+                                        className="transition-colors hover:text-[#F7F2FC]"
+                                    >
+                                        <FaFacebook size={14} />
+                                    </motion.a>
+                                </div>
+
+                                {/* CENTER: ANNOUNCEMENTS */}
+                                <div className="min-w-0 flex-1 overflow-hidden">
+                                    <AnnouncementMarquee />
+                                </div>
+
+                                {/* RIGHT: HELP AND SUPPORT */}
+                                <Link
+                                    href="/contact-us"
+                                    className="flex shrink-0 items-center gap-2 text-[9px] font-medium tracking-[0.14em] text-white/85 transition-colors hover:text-[#F7F2FC]"
+                                >
+                                    <Headphones size={13} />
+                                    HELP & SUPPORT
+                                </Link>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* ================================================== */}
             {/* MAIN NAVBAR */}
             {/* ================================================== */}
 
             <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
-                <div className="relative flex h-[76px] items-center justify-between gap-3 overflow-hidden md:h-[92px]">
+                <div className="relative flex h-[70px] items-center justify-between gap-3 overflow-hidden">
 
                     {/* MOBILE MENU BUTTON */}
 
@@ -338,18 +395,17 @@ export default function Navbar() {
                                 category.href === "/our-products"
                                     ? pathname === "/our-products"
                                     : category.href === "/about-us"
-                                      ? pathname === "/about-us"
-                                      : false;
+                                        ? pathname === "/about-us"
+                                        : false;
 
                             return (
                                 <Link
                                     key={category.name}
                                     href={category.href}
-                                    className={`group relative whitespace-nowrap py-3 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors xl:text-[11px] ${
-                                        isActive
-                                            ? "text-[#7D45C2]"
-                                            : "text-[#24202B] hover:text-[#7D45C2]"
-                                    }`}
+                                    className={`group relative whitespace-nowrap py-3 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors xl:text-[13px] ${isActive
+                                        ? "text-[#7D45C2]"
+                                        : "text-[#24202B] hover:text-[#7D45C2]"
+                                        }`}
                                 >
                                     {category.name}
 
@@ -383,11 +439,10 @@ export default function Navbar() {
                             }}
                             aria-label="Search products"
                             aria-expanded={searchOpen}
-                            className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors sm:h-11 sm:w-11 ${
-                                searchOpen
-                                    ? "bg-[#F7F2FC] text-[#7D45C2]"
-                                    : "hover:bg-[#F7F2FC] hover:text-[#7D45C2]"
-                            }`}
+                            className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors sm:h-11 sm:w-11 ${searchOpen
+                                ? "bg-[#F7F2FC] text-[#7D45C2]"
+                                : "hover:bg-[#F7F2FC] hover:text-[#7D45C2]"
+                                }`}
                         >
                             <Search size={20} strokeWidth={1.7} />
                         </motion.button>
@@ -422,7 +477,7 @@ export default function Navbar() {
                             <ShoppingBag size={20} strokeWidth={1.7} />
 
                             <span className="absolute right-0.5 top-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#7D45C2] px-1 text-[9px] font-bold text-white ring-2 ring-white">
-                                0
+                                {cartCount > 99 ? "99+" : cartCount}
                             </span>
                         </Link>
                     </div>

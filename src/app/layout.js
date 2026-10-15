@@ -39,7 +39,7 @@ export default function RootLayout({ children }) {
         <ReduxProvider>
           <SmoothScroll>
             <Navbar />
-            <main className="flex-1">{children}</main>
+            {children}
             <Footer />
           </SmoothScroll>
         </ReduxProvider>

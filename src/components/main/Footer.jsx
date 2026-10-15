@@ -17,6 +17,7 @@ import {
 
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const socials = [
     {
@@ -48,7 +49,8 @@ const socials = [
 
 export default function Footer() {
     const { scrollYProgress } = useScroll();
-
+    const pathname = usePathname();
+    if (pathname.startsWith("/admin")) return null;
     /*
      * Logo starts zoomed out.
      * When the footer enters the viewport,
@@ -182,7 +184,7 @@ export default function Footer() {
                                     md:text-xl
                                 "
                             >
-                                For the skin- smart generation.
+                                For the skin - smart generation.
                             </p>
 
                             <p
@@ -299,11 +301,13 @@ export default function Footer() {
 
                                 {[
                                     { name: "Home", href: "/" },
-                                    { name: "About Us", href: "/about-us" },
-                                    { name: "Our Story", href: "/about#our-story" },
+                                    // { name: "About Us", href: "/about-us" },
+                                    { name: "Our Products", href: "/our-products" },
+                                    { name: "Our Story", href: "/our-story" },
                                     { name: "Our Philosophy", href: "/our-philosophy" },
+                                    { name: "Newsletter", href: "/newsletter" },
                                 ].map((item, idx) => (
-                                    <a
+                                    <Link
                                         key={idx}
                                         href={item.href}
                                         className="
@@ -331,7 +335,7 @@ export default function Footer() {
                                                 group-hover:opacity-100
                                             "
                                         />
-                                    </a>
+                                    </Link>
                                 ))}
 
                             </nav>
