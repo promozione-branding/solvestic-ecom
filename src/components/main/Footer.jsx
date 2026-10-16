@@ -58,7 +58,7 @@ export default function Footer() {
      */
     const logoScale = useTransform(
         scrollYProgress,
-        [0.72, 0.82, 0.92],
+        [0.82, 0.92, 1],
         [0.72, 0.92, 1.08]
     );
 
@@ -82,26 +82,6 @@ export default function Footer() {
             {/* ================================================= */}
 
             <section className="relative flex h-[15vh] md:h-[30vh] md:min-h-[400px] items-center justify-center overflow-hidden">
-
-                {/* SOFT BACKGROUND GLOW */}
-                {/* <div
-                    className="
-                        pointer-events-none
-                        absolute
-                        left-1/2
-                        top-1/2
-                        h-[70vw]
-                        w-[70vw]
-                        max-h-[900px]
-                        max-w-[900px]
-                        -translate-x-1/2
-                        -translate-y-1/2
-                        rounded-full
-                        bg-white
-                        blur-3xl
-                    "
-                /> */}
-
                 {/* LOGO */}
                 <motion.div
                     style={{
