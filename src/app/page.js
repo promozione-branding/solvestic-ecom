@@ -34,18 +34,18 @@ export default function Home() {
       <HeroSection />
       <BestSellersSection onAddToCart={(product) => { handleAddToCart(product); }} />
       <SkinConcernsSection />
-      <AboutSection />
+      {/* <AboutSection /> */}
       <Certifications />
-      <VideoTestimonials />
+      {/* <VideoTestimonials /> */}
       <SolvesticMarquee />
-      <FeaturedProducts />
-      <ProductCatalog onAddToCart={(product) => { handleAddToCart(product); }} />
+      {/* <FeaturedProducts /> */}
+      {/* <ProductCatalog onAddToCart={(product) => { handleAddToCart(product); }} /> */}
       <ActivatorSection />
       {/* <WhyChooseUs /> */}
       <FounderReels />
-      <FAQSection />
+      {/* <FAQSection /> */}
       <GuessNewLaunch />
-      <Jointcommunity />
+      {/* <Jointcommunity /> */}
     </>
   );
 }

@@ -37,9 +37,9 @@ function MarqueeContent() {
                     {/* Decorative symbol */}
                     <span
                         aria-hidden="true"
-                        className="text-[34px] leading-none text-[#8B89C2] md:text-[48px]"
+                        className="text-[34px] leading-none text-[#7D45C2]"
                     >
-                        {item.icon}
+                        ●
                     </span>
 
                     {/* Text */}
@@ -51,7 +51,7 @@ function MarqueeContent() {
                     </div>
 
                     {/* Small product image */}
-                    <div className="relative flex h-[65px] w-[48px] shrink-0 items-center justify-center sm:h-[85px] sm:w-[60px] lg:h-[105px] lg:w-[75px]">
+                    {/* <div className="relative flex h-[65px] w-[48px] shrink-0 items-center justify-center sm:h-[85px] sm:w-[60px] lg:h-[105px] lg:w-[75px]">
                         <Image
                             src="/products/1.png"
                             alt="Solvestic Face Cleanser"
@@ -59,7 +59,7 @@ function MarqueeContent() {
                             sizes="(max-width: 640px) 48px, 75px"
                             className="object-contain"
                         />
-                    </div>
+                    </div> */}
                 </div>
             ))}
         </div>

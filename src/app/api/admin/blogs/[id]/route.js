@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import connectDB from "@/lib/mongodb";
@@ -8,8 +7,6 @@ import {
     createPermalink,
     validateBlogFields,
 } from "@/lib/blog-helpers";
-
-// Replace with your existing R2 helper exports/signature.
 import { uploadBlogImage, deleteR2Image } from "@/lib/r2";
 
 export const runtime = "nodejs";
@@ -26,6 +23,7 @@ function authorize(request) {
     }
 }
 
+// GET: Fetch a single blog
 export async function GET(request, { params }) {
     try {
         if (!authorize(request)) {
@@ -41,7 +39,7 @@ export async function GET(request, { params }) {
 
         if (!mongoose.isValidObjectId(id)) {
             return NextResponse.json(
-                { message: "Invalid blog ID" },
+                { success: false, message: "Invalid blog ID." },
                 { status: 400 }
             );
         }
@@ -50,33 +48,34 @@ export async function GET(request, { params }) {
 
         if (!blog) {
             return NextResponse.json(
-                { message: "Blog not found" },
+                { success: false, message: "Blog not found." },
                 { status: 404 }
             );
         }
 
-        return NextResponse.json({ blog }, { status: 200 });
+        return NextResponse.json({ success: true, blog });
     } catch (error) {
-        console.error("Get blog by ID error:", error);
+        console.error("Get blog error:", error);
 
         return NextResponse.json(
-            { message: "Failed to fetch blog" },
+            { success: false, message: "Failed to fetch blog." },
             { status: 500 }
         );
     }
 }
 
+// PUT: Update a blog and optionally replace its image
 export async function PUT(request, { params }) {
-    if (!authorize(request)) {
-        return NextResponse.json(
-            { success: false, message: "Unauthorized." },
-            { status: 401 }
-        );
-    }
-
     let uploadedImageKey = "";
 
     try {
+        if (!authorize(request)) {
+            return NextResponse.json(
+                { success: false, message: "Unauthorized." },
+                { status: 401 }
+            );
+        }
+
         const { id } = await params;
 
         if (!mongoose.isValidObjectId(id)) {
@@ -99,10 +98,15 @@ export async function PUT(request, { params }) {
 
         const formData = await request.formData();
 
-        const title = String(formData.get("title") ?? blog.title).trim();
-        const date = String(
-            formData.get("date") ?? blog.date.toISOString()
+        const title = String(
+            formData.get("title") ?? blog.title
         ).trim();
+
+        const rawDate = formData.get("date");
+        const date = String(
+            rawDate ?? blog.date.toISOString()
+        ).trim();
+
         const content = String(
             formData.get("content") ?? blog.content
         ).trim();
@@ -114,11 +118,11 @@ export async function PUT(request, { params }) {
         const permalink = createPermalink(permalinkInput);
 
         const metaTitle = String(
-            formData.get("metaTitle") ?? blog.metaTitle
+            formData.get("metaTitle") ?? blog.metaTitle ?? ""
         ).trim();
 
         const metaDescription = String(
-            formData.get("metaDescription") ?? blog.metaDescription
+            formData.get("metaDescription") ?? blog.metaDescription ?? ""
         ).trim();
 
         const validationError = validateBlogFields({
@@ -131,6 +135,15 @@ export async function PUT(request, { params }) {
         if (validationError) {
             return NextResponse.json(
                 { success: false, message: validationError },
+                { status: 400 }
+            );
+        }
+
+        const parsedDate = new Date(date);
+
+        if (Number.isNaN(parsedDate.getTime())) {
+            return NextResponse.json(
+                { success: false, message: "Invalid blog date." },
                 { status: 400 }
             );
         }
@@ -161,15 +174,41 @@ export async function PUT(request, { params }) {
                 );
             }
 
+            // Upload replacement image to R2.
             const uploaded = await uploadBlogImage(file);
 
-            newImage = uploaded.url;
-            newImageKey = uploaded.key;
+            // Match the actual return shape from your R2 helper.
+            newImage = uploaded?.imageUrl;
+            newImageKey = uploaded?.imageKey;
+
+            if (!newImage || !newImageKey) {
+                // If upload returned an object key, clean it up if possible.
+                if (newImageKey) {
+                    try {
+                        await deleteR2Image(newImageKey);
+                    } catch (cleanupError) {
+                        console.error(
+                            "Incomplete upload cleanup error:",
+                            cleanupError
+                        );
+                    }
+                }
+
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: "Image upload did not return a valid image URL and key.",
+                    },
+                    { status: 500 }
+                );
+            }
+
+            // Track the new upload in case the database update fails.
             uploadedImageKey = newImageKey;
         }
 
         blog.title = title;
-        blog.date = new Date(date);
+        blog.date = parsedDate;
         blog.permalink = permalink;
         blog.content = content;
         blog.metaTitle = metaTitle;
@@ -179,8 +218,12 @@ export async function PUT(request, { params }) {
 
         await blog.save();
 
-        // Only remove the old image after the updated record is saved.
-        if (uploadedImageKey && oldImageKey && oldImageKey !== newImageKey) {
+        // Database update succeeded. Now delete the old R2 image.
+        if (
+            uploadedImageKey &&
+            oldImageKey &&
+            oldImageKey !== newImageKey
+        ) {
             try {
                 await deleteR2Image(oldImageKey);
             } catch (cleanupError) {
@@ -194,6 +237,7 @@ export async function PUT(request, { params }) {
             blog,
         });
     } catch (error) {
+        // If saving fails after uploading a replacement, remove the new image.
         if (uploadedImageKey) {
             try {
                 await deleteR2Image(uploadedImageKey);
@@ -218,15 +262,16 @@ export async function PUT(request, { params }) {
     }
 }
 
+// DELETE: Delete a blog and its associated R2 image
 export async function DELETE(request, { params }) {
-    if (!authorize(request)) {
-        return NextResponse.json(
-            { success: false, message: "Unauthorized." },
-            { status: 401 }
-        );
-    }
-
     try {
+        if (!authorize(request)) {
+            return NextResponse.json(
+                { success: false, message: "Unauthorized." },
+                { status: 401 }
+            );
+        }
+
         const { id } = await params;
 
         if (!mongoose.isValidObjectId(id)) {
@@ -247,26 +292,28 @@ export async function DELETE(request, { params }) {
             );
         }
 
-        // Delete the database record first. A failed R2 deletion can be retried.
+        const imageKey = blog.imageFileId;
+
+        // Delete the database record first.
         await blog.deleteOne();
 
-        if (blog.imageFileId) {
+        if (imageKey) {
             try {
-                await deleteR2Image(blog.imageFileId);
+                await deleteR2Image(imageKey);
             } catch (error) {
                 console.error("Deleted blog image cleanup error:", error);
 
                 return NextResponse.json({
                     success: true,
                     message:
-                        "Blog deleted, but its image could not be removed from storage.",
+                        "Blog deleted, but its image could not be removed from R2.",
                 });
             }
         }
 
         return NextResponse.json({
             success: true,
-            message: "Blog deleted successfully.",
+            message: "Blog and associated image deleted successfully.",
         });
     } catch (error) {
         console.error("Delete blog error:", error);

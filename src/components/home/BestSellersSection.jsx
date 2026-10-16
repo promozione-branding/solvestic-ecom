@@ -265,7 +265,7 @@ export default function BestSellersSection({ onAddToCart }) {
         <section className="overflow-hidden bg-[#fbfaf8] py-10 text-[#252329] sm:py-12 lg:py-15">
             <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
                 {/* Categories */}
-                <div className="mb-8">
+                <div className="mb-8 hidden">
                     <div className="flex gap-5 overflow-x-auto overflow-y-hidden py-3 sm:justify-center sm:gap-8 lg:gap-10">
                         {allCategories.map((category, index) => {
                             const categoryId = category._id === "all"
@@ -280,7 +280,7 @@ export default function BestSellersSection({ onAddToCart }) {
                                 DEFAULT_IMAGE;
 
                             return (
-                                <motion.button
+                                <motion.button8
                                     key={categoryId}
                                     type="button"
                                     onClick={() => {
@@ -318,7 +318,7 @@ export default function BestSellersSection({ onAddToCart }) {
                                             category.title ||
                                             "Category"}
                                     </span>
-                                </motion.button>
+                                </motion.button8>
                             );
                         })}
                     </div>

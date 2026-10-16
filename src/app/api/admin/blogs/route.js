@@ -150,9 +150,13 @@ export async function POST(request) {
             // Adapt this call to your existing R2 helper.
             const uploaded = await uploadBlogImage(file);
 
-            image = uploaded.url;
-            imageFileId = uploaded.key;
-            uploadedImageKey = imageFileId;
+            image = uploaded.imageUrl;
+            imageFileId = uploaded.imageKey;
+            uploadedImageKey = uploaded.imageKey;
+
+            if (!image) {
+                throw new Error("R2 upload succeeded but no public image URL was returned.");
+            }
         }
 
         const blog = await Blog.create({
