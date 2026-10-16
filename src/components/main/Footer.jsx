@@ -154,14 +154,11 @@ export default function Footer() {
                         className="
                             grid
                             grid-cols-1
-                            lg:grid-cols-[1.6fr_0.8fr_0.8fr_1fr]
+                            lg:grid-cols-3
+                            xl:grid-cols-[1.1fr_1fr_1fr_1fr_1fr]
                         "
                     >
-
-                        {/* ===================================== */}
                         {/* NEWSLETTER */}
-                        {/* ===================================== */}
-
                         <div
                             className="
                                 border-b
@@ -171,7 +168,6 @@ export default function Footer() {
                                 lg:border-b-0
                                 lg:border-r
                                 lg:p-12
-                                xl:p-14
                             "
                         >
 
@@ -269,10 +265,7 @@ export default function Footer() {
 
                         </div>
 
-                        {/* ===================================== */}
                         {/* NAVIGATE */}
-                        {/* ===================================== */}
-
                         <div
                             className="
                                 border-b
@@ -281,7 +274,7 @@ export default function Footer() {
                                 md:p-10
                                 lg:border-b-0
                                 lg:border-r
-                                lg:p-12
+                                lg:p-10
                             "
                         >
 
@@ -304,7 +297,7 @@ export default function Footer() {
                                     // { name: "About Us", href: "/about-us" },
                                     { name: "Our Products", href: "/our-products" },
                                     { name: "Our Story", href: "/our-story" },
-                                    { name: "Our Philosophy", href: "/our-philosophy" },
+                                    { name: "Contact", href: "/contact-us" },
                                     { name: "Newsletter", href: "/newsletter" },
                                 ].map((item, idx) => (
                                     <Link
@@ -342,10 +335,7 @@ export default function Footer() {
 
                         </div>
 
-                        {/* ===================================== */}
                         {/* SOCIAL */}
-                        {/* ===================================== */}
-
                         <div
                             className="
                                 border-b
@@ -354,7 +344,7 @@ export default function Footer() {
                                 md:p-10
                                 lg:border-b-0
                                 lg:border-r
-                                lg:p-12
+                                lg:p-10
                             "
                         >
 
@@ -415,105 +405,153 @@ export default function Footer() {
 
                         </div>
 
-                        {/* ===================================== */}
-                        {/* OFFICIAL / SUPPORT */}
-                        {/* ===================================== */}
-                        <div className="p-4 md:p-10 lg:p-12">
+                        <div
+                            className="
+                                border-b
+                                border-black/20
+                                p-4
+                                md:p-10
+                                lg:border-b-0
+                                lg:border-r
+                                lg:p-10
+                            "
+                        >
 
-                            <div className="space-y-7">
+                            <h3
+                                className="
+                                    text-sm
+                                    font-bold
+                                    uppercase
+                                    tracking-[0.15em]
+                                    text-white
+                                "
+                            >
+                                Official
+                            </h3>
 
-                                {/* Address & Support */}
-                                <div className="space-y-8">
+                            <nav className="mt-3 md:mt-7 flex flex-col gap-3 md:gap-5">
 
-                                    {/* Address */}
-                                    <div className="flex items-start gap-4">
-                                        <div
+                                {[
+                                    { name: "Privacy", href: "/privacy-policy" },
+                                    { name: "Terms", href: "/terms-and-conditions" },
+                                    { name: "FAQ", href: "/faq" },
+
+                                    { name: "Shipping", href: "/shipping-policy" },
+                                ].map((item, idx) => (
+                                    <Link
+                                        key={idx}
+                                        href={item.href}
+                                        className="
+                                            group
+                                            flex
+                                            items-center
+                                            gap-2
+                                            text-base
+                                            text-white/80
+                                            transition-colors
+                                            duration-300
+                                            hover:text-white
+                                        "
+                                    >
+                                        {item.name}
+
+                                        <ArrowUpRight
+                                            size={16}
                                             className="
-                flex h-11 w-11 shrink-0 items-center justify-center
+                                                opacity-0
+                                                transition-all mt-2
+                                                duration-300
+                                                group-hover:translate-x-1
+                                                group-hover:-translate-y-1
+                                                group-hover:opacity-100
+                                            "
+                                        />
+                                    </Link>
+                                ))}
+
+                            </nav>
+
+                        </div>
+
+                        {/* OFFICIAL / SUPPORT */}
+                        <div className="
+                                border-b
+                                border-black/20
+                                p-4
+                                md:p-10
+                                lg:border-b-0
+                                lg:border-r
+                                lg:p-10
+                            ">
+
+                            <div className="flex items-center gap-2">
+                                <div
+                                    className="
+                flex h-8 w-8 shrink-0 items-center justify-center
                 rounded-full bg-white/10 text-white
                 ring-1 ring-white/10
             "
-                                        >
-                                            <MapPin size={20} strokeWidth={1.8} />
-                                        </div>
+                                >
+                                    <MapPin size={15} strokeWidth={1.8} />
+                                </div>
+                                <p className="text-xs font-medium uppercase tracking-[0.12em] text-white/90">
+                                    Office Address
+                                </p>
+                            </div>
 
-                                        <div>
-                                            <p className="text-xs font-medium uppercase tracking-[0.12em] text-white/90">
-                                                Office Address
-                                            </p>
-                                            <p className="mt-1 text-base font-semibold md:leading-relaxed text-white">
-                                                Solvestic Wellness Private Limited
-                                            </p>
+                            {/* Address */}
+                            <div className="mt-3 flex flex-col">
+                                <p className="mt-2 text-sm font-semibold md:leading-relaxed text-white">
+                                    Solvestic Wellness Private Limited
+                                </p>
 
-                                            <p className="mt-2 max-w-md text-sm md:leading-7 text-white">
-                                                Office No. 1001, Pearl Best Heights-2,
-                                                <br />
-                                                Plot-C9, NSP, Pitampura,
-                                                <br />
-                                                Delhi – 110034
-                                            </p>
-                                        </div>
-                                    </div>
+                                <p className="mt-1 max-w-md text-nowrap text-sm text-white">
+                                    Office No. 1001, Pearl Best Heights-2,
+                                    <br />
+                                    Plot-C9, NSP, Pitampura,
+                                    <br />
+                                    Delhi – 110034
+                                </p>
 
-                                    {/* Support */}
-                                    <div className="flex items-start gap-4">
-                                        <div
-                                            className="
-            flex h-11 w-11 shrink-0 items-center justify-center
-            rounded-full bg-white/10 text-white
-            ring-1 ring-white/10
-        "
-                                        >
-                                            <Clock3 size={20} strokeWidth={1.8} />
-                                        </div>
+                                <p className="mt-2 text-sm leading-5 text-white">
+                                    We're here Monday – Saturday
+                                    <br />
+                                    <span className="text-white/75">
+                                        11:00 AM – 6:15 PM
+                                    </span>
+                                </p>
 
-                                        <div>
-                                            <p className="text-xs font-medium uppercase tracking-[0.12em] text-white/90">
-                                                Support
-                                            </p>
+                                <p className="mt-1 text-sm leading-7 text-white">
+                                    Drop us a note anytime.
+                                </p>
 
-                                            <p className="mt-1 text-sm leading-7 text-white">
-                                                We're here Monday – Saturday
-                                                <br />
-                                                <span className="text-white/75">
-                                                    11:00 AM – 6:15 PM
-                                                </span>
-                                            </p>
-
-                                            <p className="mt-1 text-sm leading-7 text-white">
-                                                Drop us a note anytime.
-                                            </p>
-
-                                            {/* ── PHONE ── */}
-                                            <a
-                                                href="tel:+919220788799"
-                                                className="
-                mt-3 flex items-center gap-2
-                text-sm text-white/90
-                transition-colors duration-300
-                hover:text-white
-            "
-                                            >
-                                                <Phone size={14} strokeWidth={1.8} className="shrink-0" />
-                                                +91 9220788799
-                                            </a>
-
-                                            {/* ── EMAIL ── */}
-                                            <a
-                                                href="mailto:care@solvestic.com"
-                                                className="
+                                {/* ── PHONE ── */}
+                                <a
+                                    href="tel:+919220788799"
+                                    className="
                 mt-2 flex items-center gap-2
                 text-sm text-white/90
                 transition-colors duration-300
                 hover:text-white
             "
-                                            >
-                                                <Mail size={14} strokeWidth={1.8} className="shrink-0" />
-                                                care@solvestic.com
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
+                                >
+                                    <Phone size={14} strokeWidth={1.8} className="shrink-0" />
+                                    +91 9220788799
+                                </a>
+
+                                {/* ── EMAIL ── */}
+                                <a
+                                    href="mailto:care@solvestic.com"
+                                    className="
+                mt-2 flex items-center gap-2
+                text-sm text-white/90
+                transition-colors duration-300
+                hover:text-white
+            "
+                                >
+                                    <Mail size={14} strokeWidth={1.8} className="shrink-0" />
+                                    care@solvestic.com
+                                </a>
                             </div>
                         </div>
 
