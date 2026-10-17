@@ -384,7 +384,8 @@ export default function BestSellersSection({ onAddToCart }) {
                                         : 0;
 
                                 return (
-                                    <motion.article
+                                    <motion.a
+                                        href={`our-products/${product?.slug}`}
                                         key={product.id}
                                         variants={cardVariants}
                                         layout
@@ -490,7 +491,7 @@ export default function BestSellersSection({ onAddToCart }) {
                                                     : "Add to Cart"}
                                             </button>
                                         </div>
-                                    </motion.article>
+                                    </motion.a>
                                 );
                             })}
                         </motion.div>

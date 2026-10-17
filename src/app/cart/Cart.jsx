@@ -784,12 +784,9 @@ export default function Cart() {
                                         </div>
                                     </div>
 
-                                    <button
-                                        type="button"
+                                    <Link
                                         disabled={items.length === 0 || items.some((item) => !item.inStock)}
-                                        onClick={() => {
-                                            window.location.href = "/checkout";
-                                        }}
+                                        href={"/checkout"}
                                         className="group flex w-full items-center justify-center gap-2 rounded-xl bg-[#7D45C2] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#6937AA] disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         Proceed to Checkout
@@ -797,7 +794,7 @@ export default function Cart() {
                                             size={18}
                                             className="transition-transform group-hover:translate-x-1"
                                         />
-                                    </button>
+                                    </Link>
 
                                     <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
                                         <LockKeyhole size={14} />

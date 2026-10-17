@@ -1138,7 +1138,7 @@ export default function ProductPage({ initialProduct, slug }) {
 
             <TextureDetailsSection />
 
-            <ReviewsSection />
+            <ReviewsSection productId={product._id.toString()} />
         </main>
     );
 }

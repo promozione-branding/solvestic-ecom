@@ -101,6 +101,68 @@ export async function uploadBlogImage(file) {
     };
 }
 
+export async function uploadReviewContent(file) {
+    if (!bucket || !publicUrl) {
+        throw new Error("R2 bucket or public URL is not configured.");
+    }
+
+    const allowedTypes = {
+        // Images
+        "image/jpeg": { extension: "jpg", type: "image" },
+        "image/png": { extension: "png", type: "image" },
+        "image/webp": { extension: "webp", type: "image" },
+        "image/avif": { extension: "avif", type: "image" },
+
+        // Videos
+        "video/mp4": { extension: "mp4", type: "video" },
+        "video/webm": { extension: "webm", type: "video" },
+        "video/quicktime": { extension: "mov", type: "video" },
+    };
+
+    const fileConfig = allowedTypes[file.type];
+
+    if (!fileConfig) {
+        throw new Error(
+            "Allowed formats: JPG, PNG, WebP, AVIF, MP4, WebM, and MOV."
+        );
+    }
+
+    const maxSize =
+        fileConfig.type === "image"
+            ? 5 * 1024 * 1024
+            : 25 * 1024 * 1024;
+
+    if (file.size === 0 || file.size > maxSize) {
+        throw new Error(
+            fileConfig.type === "image"
+                ? "Each review image must be smaller than 5 MB."
+                : "The review video must be smaller than 25 MB."
+        );
+    }
+
+    const key = `reviews/${randomUUID()}.${fileConfig.extension}`;
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    await r2.send(
+        new PutObjectCommand({
+            Bucket: bucket,
+            Key: key,
+            Body: buffer,
+            ContentType: file.type,
+            CacheControl: "public, max-age=31536000, immutable",
+        })
+    );
+
+    return {
+        key,
+        url: `${publicUrl}/${key}`,
+        type: fileConfig.type,
+        mimeType: file.type,
+        size: file.size,
+    };
+}
+
 export async function deleteR2Image(key) {
     if (!key) return;
 
