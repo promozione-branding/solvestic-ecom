@@ -5,6 +5,7 @@ import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import { Heart, ShoppingBag, Star } from "lucide-react";
 import { addToWishlist } from "@/lib/wishlist-storage";
+import Link from "next/link";
 
 const DEFAULT_IMAGE =
     "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?auto=format&fit=crop&w=500&q=85";
@@ -259,7 +260,7 @@ export default function BestSellersSection({ onAddToCart }) {
         onAddToCart?.(product);
     };
 
-    console.log(filteredProducts)
+    // console.log(filteredProducts)
 
     return (
         <section className="overflow-hidden bg-[#fbfaf8] py-10 text-[#252329] sm:py-12 lg:py-15">
@@ -280,7 +281,7 @@ export default function BestSellersSection({ onAddToCart }) {
                                 DEFAULT_IMAGE;
 
                             return (
-                                <motion.button8
+                                <motion.button
                                     key={categoryId}
                                     type="button"
                                     onClick={() => {
@@ -318,7 +319,7 @@ export default function BestSellersSection({ onAddToCart }) {
                                             category.title ||
                                             "Category"}
                                     </span>
-                                </motion.button8>
+                                </motion.button>
                             );
                         })}
                     </div>
@@ -384,7 +385,7 @@ export default function BestSellersSection({ onAddToCart }) {
                                         : 0;
 
                                 return (
-                                    <motion.a
+                                    <Link
                                         href={`our-products/${product?.slug}`}
                                         key={product.id}
                                         variants={cardVariants}
@@ -408,7 +409,7 @@ export default function BestSellersSection({ onAddToCart }) {
 
                                                 <button
                                                     type="button"
-                                                    onClick={() => toggleWishlist(product)}
+                                                    onClick={(e) => { e.preventDefault(), toggleWishlist(product) }}
                                                     aria-label={
                                                         isWishlisted
                                                             ? "Remove from wishlist"
@@ -479,7 +480,7 @@ export default function BestSellersSection({ onAddToCart }) {
 
                                             <button
                                                 type="button"
-                                                onClick={() => addToCart(product)}
+                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); addToCart(product); }}
                                                 className={`mt-4 flex w-full items-center justify-center gap-2 rounded-full px-4 py-3.5 text-[11px] font-semibold uppercase tracking-[0.12em] transition-all ${isAdded
                                                     ? "bg-[#dcebd7] text-[#3d653a]"
                                                     : "bg-[#918ac6] text-white hover:bg-[#7770ad]"
@@ -491,7 +492,7 @@ export default function BestSellersSection({ onAddToCart }) {
                                                     : "Add to Cart"}
                                             </button>
                                         </div>
-                                    </motion.a>
+                                    </Link>
                                 );
                             })}
                         </motion.div>

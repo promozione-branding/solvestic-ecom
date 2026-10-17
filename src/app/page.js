@@ -16,23 +16,74 @@ import Jointcommunity from "@/components/home/Joincommunity";
 import { addToGuestCart } from "@/lib/cart-storage";
 import FounderReels from "@/components/home/FounderReels";
 import GuessNewLaunch from "@/components/home/GuessOurLaunch";
+import { useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function Home() {
-  const handleAddToCart = (product) => {
-    // console.log(product, product.variants[0])
-    const result = addToGuestCart(product._id, 1, product.variants[0]);
+  const router = useRouter();
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-    if (result.success) {
-      console.log("Cart updated:", result.items);
-    } else {
-      console.error("Could not update the cart.");
+  const handleAddToCart = async (product) => {
+    const variant = product.variants?.[0];
+
+    if (!variant?.size) {
+      toast.error("No product variant is available.");
+      return;
+    }
+
+    if (!isAuthenticated || !user) {
+      const result = addToGuestCart(
+        product._id,
+        1,
+        variant
+      );
+
+      if (!result.success) {
+        toast.error("Unable to add product to cart.");
+      }
+
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/user/cart", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          productId: product._id,
+          quantity: 1,
+          variant: variant.size,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Unable to add product to cart."
+        );
+      }
+
+      toast.success("Product added to cart!");
+
+      window.dispatchEvent(
+        new Event("solvestic-cart-updated")
+      );
+    } catch (error) {
+      toast.error(error.message);
     }
   };
 
   return (
     <>
       <HeroSection />
-      <BestSellersSection onAddToCart={(product) => { handleAddToCart(product); }} />
+      <BestSellersSection
+        onAddToCart={handleAddToCart}
+      />
       <SkinConcernsSection />
       {/* <AboutSection /> */}
       <Certifications />

@@ -361,6 +361,9 @@ export default function Cart() {
                         variant: item.variant || "",
                     }),
                 });
+                window.dispatchEvent(
+                    new Event("solvestic-cart-updated")
+                );
             } else {
                 const result = removeFromGuestCart(
                     item.productId,
@@ -371,7 +374,9 @@ export default function Cart() {
                     throw new Error("Unable to remove this item from your cart.");
                 }
             }
-
+            window.dispatchEvent(
+                new Event("solvestic-cart-updated")
+            );
             setItems((prev) =>
                 prev.filter(
                     (cartItem) =>

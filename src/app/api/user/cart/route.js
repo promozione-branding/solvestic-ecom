@@ -62,6 +62,126 @@ async function getOrCreateCart(userId) {
     return cart;
 }
 
+// POST /api/user/cart — Add product to authenticated user's cart
+export async function POST(request) {
+    try {
+        const auth = await getAuthenticatedCartUserId();
+
+        if (!auth.userId) {
+            return errorResponse(auth.error, auth.status);
+        }
+
+        const body = await request.json();
+
+        const productId = normalizeProductId(body.productId);
+        const quantity = Number(body.quantity ?? 1);
+        const variant = normalizeVariant(body.variant);
+
+        if (!mongoose.isValidObjectId(productId)) {
+            return errorResponse("A valid product ID is required.");
+        }
+
+        if (
+            !Number.isInteger(quantity) ||
+            quantity < 1 ||
+            quantity > MAX_QUANTITY
+        ) {
+            return errorResponse("Quantity must be between 1 and 99.");
+        }
+
+        if (!variant || variant.length > 100) {
+            return errorResponse("A valid product variant is required.");
+        }
+
+        await connectDB();
+
+        const product = await Product.findById(productId);
+
+        if (!product) {
+            return errorResponse(
+                "This product is no longer available.",
+                404
+            );
+        }
+
+        // Verify that the requested variant belongs to this product.
+        const selectedVariant = product.variants?.find(
+            (item) =>
+                String(item.size || "").trim().toLowerCase() ===
+                variant.toLowerCase()
+        );
+
+        if (!selectedVariant) {
+            return errorResponse(
+                "This product variant is unavailable.",
+                400
+            );
+        }
+
+        if (
+            product.status === "inactive" ||
+            product.status === "coming-soon"
+        ) {
+            return errorResponse(
+                "This product is currently unavailable.",
+                400
+            );
+        }
+
+        const cart = await getOrCreateCart(auth.userId);
+
+        const index = findItemIndex(
+            cart.items,
+            productId,
+            variant
+        );
+
+        if (index !== -1) {
+            // Same product and variant: increase quantity.
+            const currentQuantity = Number(
+                cart.items[index].quantity || 0
+            );
+
+            if (currentQuantity + quantity > MAX_QUANTITY) {
+                return errorResponse(
+                    "Maximum quantity per variant is 99."
+                );
+            }
+
+            cart.items[index].quantity =
+                currentQuantity + quantity;
+        } else {
+            if (cart.items.length >= 100) {
+                return errorResponse(
+                    "Your cart has reached its item limit."
+                );
+            }
+
+            cart.items.push({
+                productId,
+                quantity,
+                variant: String(selectedVariant.size).trim(),
+            });
+        }
+
+        await cart.save();
+        await cart.populate("items.productId");
+
+        return NextResponse.json({
+            success: true,
+            message: "Product added to cart successfully.",
+            cart,
+        });
+    } catch (error) {
+        console.error("POST cart error:", error);
+
+        return errorResponse(
+            "Unable to add product to your cart.",
+            500
+        );
+    }
+}
+
 // GET /api/user/cart
 export async function GET() {
     try {
