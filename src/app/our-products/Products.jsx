@@ -11,10 +11,11 @@ import {
     FiSearch,
     FiX,
 } from "react-icons/fi";
-
+import { useSelector } from "react-redux";
 import {
     addToGuestCart,
 } from "@/lib/cart-storage";
+import toast from "react-hot-toast";
 
 const WISHLIST_KEY = "solvestic_wishlist";
 
@@ -100,6 +101,7 @@ const getProductHref = (product) =>
         : "/our-products";
 
 export default function Products() {
+    const { user, isAuthenticated } = useSelector((state) => state.auth);
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
 
@@ -108,7 +110,6 @@ export default function Products() {
     const [sort, setSort] = useState("featured");
 
     const [wishlist, setWishlist] = useState([]);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -183,24 +184,8 @@ export default function Products() {
         } catch {
             setWishlist([]);
         }
-
-        let active = true;
-
-        axios
-            .get("/api/user/cart")
-            .then((response) => {
-                if (active && response?.data?.success) {
-                    setIsLoggedIn(true);
-                }
-            })
-            .catch(() => {
-                if (active) setIsLoggedIn(false);
-            });
-
-        return () => {
-            active = false;
-        };
     }, []);
+
 
     const categoryNames = useMemo(() => {
         const names = categories
@@ -316,59 +301,71 @@ export default function Products() {
             const variant = getDefaultVariant(product);
 
             if (!productId) {
-                setNotice("Product information is missing");
+                toast.error("Product information is missing.");
                 return;
             }
 
             if (!variant) {
-                setNotice("This product has no available variants");
+                toast.error("This product has no available variants.");
+                return;
+            }
+
+            const variantName = String(
+                variant.size || variant.name || ""
+            ).trim();
+
+            if (!variantName) {
+                toast.error("This product has an invalid variant.");
                 return;
             }
 
             setAddingId(productId);
+            setNotice("");
 
             try {
-                const variantSize = String(
-                    variant.size || variant.name || ""
-                );
-
-                if (isLoggedIn) {
-                    // Add the product to the authenticated customer's cart.
-                    const response = await axios.put("/api/user/cart", {
+                if (isAuthenticated) {
+                    const response = await axios.post("/api/user/cart", {
                         productId,
                         quantity: 1,
-                        variant: variantSize,
+                        variant: variantName,
                     });
 
-                    if (!response?.data?.success) {
+                    if (!response.data?.success) {
                         throw new Error(
-                            response?.data?.message ||
-                            "Unable to add product to cart"
+                            response.data?.message ||
+                            "Unable to add product to cart."
                         );
                     }
+                    toast.success(
+                        `${product.name || product.title} added to cart.`
+                    );
                 } else {
-                    // Guest cart uses the existing Solvestic storage helper.
-                    addToGuestCart(productId, 1, variant);
+                    const result = addToGuestCart(productId, 1, variant);
+
+                    if (result?.success === false) {
+                        throw new Error(
+                            result.message || "Unable to add product to cart."
+                        );
+                    }
                 }
 
                 window.dispatchEvent(
-                    new CustomEvent("solvestic-cart-updated")
+                    new Event("solvestic-cart-updated")
                 );
 
-                setNotice(`${product.name || product.title} added to cart`);
-            } catch (err) {
-                console.error("Add to cart failed:", err);
+            } catch (error) {
+                console.error("Add to cart failed:", error);
 
-                setNotice(
-                    err?.response?.data?.message ||
-                    err?.message ||
-                    "Unable to add product to cart"
+                toast.error(
+                    error?.response?.data?.message ||
+                    error?.message ||
+                    "Unable to add product to cart."
                 );
             } finally {
                 setAddingId("");
             }
         },
-        [isLoggedIn]
+        [isAuthenticated]
     );
 
     const clearFilters = () => {
@@ -666,30 +663,6 @@ export default function Products() {
                             </button>
                         </div>
                     )}
-
-                {/* Cart and wishlist feedback */}
-                {/* <AnimatePresence>
-                    {notice && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            className="fixed bottom-5 left-1/2 z-50 flex max-w-[calc(100vw-24px)] -translate-x-1/2 items-center gap-3 rounded-full bg-[#29232f] px-5 py-3 text-xs text-white shadow-xl"
-                        >
-                            <FiShoppingCart size={16} />
-
-                            <span>{notice}</span>
-
-                            <button
-                                type="button"
-                                onClick={() => setNotice("")}
-                                aria-label="Dismiss notification"
-                            >
-                                <FiX size={15} />
-                            </button>
-                        </motion.div>
-                    )}
-                </AnimatePresence> */}
             </section>
         </main>
     );

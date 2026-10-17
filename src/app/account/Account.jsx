@@ -75,7 +75,9 @@ export default function Account() {
         currentPassword: "",
         newPassword: "",
     });
-
+    const [recentOrders, setRecentOrders] = useState([]);
+    const [ordersLoading, setOrdersLoading] = useState(false);
+    const [ordersError, setOrdersError] = useState("");
     const [addresses, setAddresses] = useState([]);
     const [addressesLoading, setAddressesLoading] = useState(false);
     const [addressError, setAddressError] = useState("");
@@ -139,6 +141,45 @@ export default function Account() {
             newPassword: "",
         });
     }, [user]);
+
+    useEffect(() => {
+        if (activeTab !== "orders" || !user) return;
+
+        let cancelled = false;
+
+        const loadRecentOrders = async () => {
+            setOrdersLoading(true);
+            setOrdersError("");
+
+            try {
+                const { data } = await axios.get("/api/user/orders", {
+                    withCredentials: true,
+                });
+
+                if (!cancelled) {
+                    setRecentOrders(data.success ? data.orders || [] : []);
+                    if (!data.success) {
+                        setOrdersError(data.message || "Unable to load orders.");
+                    }
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setOrdersError(
+                        error.response?.data?.message ||
+                        "Unable to load your orders."
+                    );
+                }
+            } finally {
+                if (!cancelled) setOrdersLoading(false);
+            }
+        };
+
+        loadRecentOrders();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [activeTab, user]);
 
     const loadAddresses = useCallback(async () => {
         setAddressesLoading(true);
@@ -694,13 +735,177 @@ export default function Account() {
                         )}
 
                         {activeTab === "orders" && (
-                            <EmptyState
-                                icon={Package}
-                                title="Your orders will appear here"
-                                description="Once your order history API is connected, you can track order status and view previous purchases here."
-                                buttonText="Explore Products"
-                                href="/our-products"
-                            />
+                            <motion.div
+                                key="orders"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="rounded-3xl border border-[#E9DDF5] bg-white p-5 shadow-sm sm:p-8"
+                            >
+                                <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                                    <div>
+                                        <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
+                                            Recent Orders
+                                        </h2>
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Your two most recent purchases.
+                                        </p>
+                                    </div>
+
+                                    <Link
+                                        href="/orders"
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#7D45C2] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#6937AA]"
+                                    >
+                                        View All Orders <ArrowRight size={17} />
+                                    </Link>
+                                </div>
+
+                                {ordersError && <Notice message={ordersError} />}
+
+                                {ordersLoading ? (
+                                    <div className="flex min-h-40 items-center justify-center">
+                                        <Loader2 className="h-8 w-8 animate-spin text-[#7D45C2]" />
+                                    </div>
+                                ) : recentOrders.length === 0 ? (
+                                    <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-[#DCC8F0] px-6 text-center">
+                                        <Package size={38} className="mb-4 text-[#7D45C2]" />
+                                        <h3 className="font-semibold text-gray-900">
+                                            No orders yet
+                                        </h3>
+                                        <p className="mt-2 text-sm text-gray-500">
+                                            Your recent purchases will appear here.
+                                        </p>
+                                        <Link
+                                            href="/our-products"
+                                            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#7D45C2] px-5 py-3 text-sm font-semibold text-white hover:bg-[#6937AA]"
+                                        >
+                                            Explore Products <ArrowRight size={17} />
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {recentOrders.map((order) => {
+                                            const items = order.items || [];
+                                            const itemCount = items.reduce(
+                                                (total, item) => total + Number(item.quantity || 0),
+                                                0
+                                            );
+
+                                            const orderStatus = (order.orderStatus || "pending")
+                                                .replaceAll("_", " ");
+
+                                            const paymentStatus = (order.paymentStatus || "pending")
+                                                .replaceAll("_", " ");
+
+                                            return (
+                                                <div
+                                                    key={order._id}
+                                                    className="rounded-2xl border border-gray-100 p-4 transition hover:border-[#DCC8F0] sm:p-5"
+                                                >
+                                                    <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+                                                        <div>
+                                                            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">
+                                                                Order Number
+                                                            </p>
+                                                            <h3 className="mt-1 break-all font-bold text-gray-900">
+                                                                {order.orderNumber}
+                                                            </h3>
+                                                            <p className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+                                                                <CalendarDays size={15} />
+                                                                {order.createdAt
+                                                                    ? new Date(order.createdAt).toLocaleDateString(
+                                                                        "en-IN",
+                                                                        {
+                                                                            day: "numeric",
+                                                                            month: "short",
+                                                                            year: "numeric",
+                                                                        }
+                                                                    )
+                                                                    : "Date unavailable"}
+                                                            </p>
+                                                        </div>
+
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <span className="rounded-full bg-[#F1E8FA] px-3 py-1.5 text-xs font-semibold capitalize text-[#7D45C2]">
+                                                                {orderStatus}
+                                                            </span>
+
+                                                            <span
+                                                                className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize ${paymentStatus === "paid"
+                                                                    ? "bg-green-50 text-green-700"
+                                                                    : paymentStatus === "failed"
+                                                                        ? "bg-red-50 text-red-600"
+                                                                        : "bg-amber-50 text-amber-700"
+                                                                    }`}
+                                                            >
+                                                                Payment: {paymentStatus}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="my-4 border-t border-gray-100" />
+
+                                                    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                                                        <div className="min-w-0">
+                                                            <p className="text-sm font-semibold text-gray-800">
+                                                                {items.length > 0
+                                                                    ? items[0].name
+                                                                    : "Order items"}
+                                                                {items.length > 1
+                                                                    ? ` + ${items.length - 1} more ${items.length - 1 === 1
+                                                                        ? "product"
+                                                                        : "products"
+                                                                    }`
+                                                                    : ""}
+                                                            </p>
+
+                                                            <p className="mt-1 text-sm text-gray-500">
+                                                                {itemCount} {itemCount === 1 ? "item" : "items"}
+                                                                {" · "}
+                                                                {order.paymentMethod === "razorpay"
+                                                                    ? "Online Payment"
+                                                                    : "Cash on Delivery"}
+                                                            </p>
+
+                                                            {order.shipment?.trackingUrl && (
+                                                                <a
+                                                                    href={order.shipment.trackingUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="mt-2 inline-block text-sm font-semibold text-[#7D45C2] hover:underline"
+                                                                >
+                                                                    Track Shipment
+                                                                </a>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="shrink-0 sm:text-right">
+                                                            <p className="text-xs text-gray-400">
+                                                                Total Amount
+                                                            </p>
+                                                            <p className="mt-1 text-xl font-bold text-gray-900">
+                                                                {new Intl.NumberFormat("en-IN", {
+                                                                    style: "currency",
+                                                                    currency: order.currency || "INR",
+                                                                    maximumFractionDigits: 2,
+                                                                }).format(Number(order.totalAmount || 0))}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+
+                                        <div className="pt-2 text-center">
+                                            <Link
+                                                href="/orders"
+                                                className="inline-flex items-center gap-2 rounded-xl border border-[#DCC8F0] px-5 py-3 text-sm font-semibold text-[#7D45C2] transition hover:bg-[#F7F2FC]"
+                                            >
+                                                View All Orders <ArrowRight size={17} />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                )}
+                            </motion.div>
                         )}
 
                         {activeTab === "help-center" && (

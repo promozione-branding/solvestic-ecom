@@ -24,6 +24,7 @@ import { Check, ChevronLeft, ChevronRight, Heart, Minus, Plus, ShoppingBag, Star
 import TextureDetailsSection from "@/components/ourproducts/TextureDetailsSection";
 import ReviewsSection from "@/components/ourproducts/Review";
 import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
 
 const WISHLIST_KEY = "solvestic_wishlist";
 
@@ -76,7 +77,7 @@ const getSpecifications = (product) =>
 const getVariantName = (variant) => String(variant?.size || variant?.name || "");
 
 export default function ProductPage({ initialProduct, slug }) {
-    const { user } = useSelector((state) => state.auth);
+    const { user, isAuthenticated } = useSelector((state) => state.auth);
     const router = useRouter();
     const product = initialProduct;
     const productId = getProductId(product);
@@ -206,30 +207,11 @@ export default function ProductPage({ initialProduct, slug }) {
 
             setWishlist(
                 Array.isArray(saved) &&
-                saved.some(
-                    (item) => getProductId(item) === productId
-                )
+                saved.some((item) => getProductId(item) === productId)
             );
         } catch {
             setWishlist(false);
         }
-
-        let active = true;
-
-        axios
-            .get("/api/user/cart")
-            .then((response) => {
-                if (active && response?.data?.success) {
-                    setIsLoggedIn(true);
-                }
-            })
-            .catch(() => {
-                if (active) setIsLoggedIn(false);
-            });
-
-        return () => {
-            active = false;
-        };
     }, [productId]);
 
     const toggleWishlist = () => {
@@ -250,45 +232,58 @@ export default function ProductPage({ initialProduct, slug }) {
 
     const handleAddToCart = async (goToCart = false) => {
         if (!productId || !variant) {
-            setNotice("This product currently has no available variants.");
+            toast.error("This product currently has no available variants.");
+            return;
+        }
+
+        const variantName = getVariantName(variant);
+
+        if (!variantName) {
+            toast.error("Please select a valid product variant.");
             return;
         }
 
         setAdding(true);
+        setNotice("");
+
         try {
-            const variantName = getVariantName(variant);
-            // console.log(variantName, variant)
-            if (isLoggedIn) {
-                const response = await axios.put("/api/user/cart", {
+            if (isAuthenticated) {
+                const response = await axios.post("/api/user/cart", {
                     productId,
                     quantity,
                     variant: variantName,
                 });
 
-                if (!response?.data?.success) {
+                if (!response.data?.success) {
                     throw new Error(
-                        response?.data?.message ||
-                        "Unable to add product to cart"
+                        response.data?.message || "Unable to add product to cart."
                     );
                 }
+                toast.success(`${product.name} (${variantName}) added to cart.`);
             } else {
-                addToGuestCart(productId, quantity, variant);
+                const result = addToGuestCart(productId, quantity, variant);
+
+                if (result?.success === false) {
+                    throw new Error(
+                        result.message || "Unable to add product to cart."
+                    );
+                }
             }
 
-            window.dispatchEvent(new CustomEvent("solvestic-cart-updated"));
+            window.dispatchEvent(new Event("solvestic-cart-updated"));
+
             if (goToCart) {
                 router.push("/cart");
                 return;
             }
-
-            setNotice(`${product.name} (${variantName}) added to cart`);
+            setNotice(`${product.name} (${variantName}) added to cart.`);
         } catch (error) {
             console.error("Add to cart failed:", error);
 
             setNotice(
                 error?.response?.data?.message ||
                 error?.message ||
-                "Unable to add product to cart"
+                "Unable to add product to cart."
             );
         } finally {
             setAdding(false);

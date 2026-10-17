@@ -54,6 +54,7 @@ export default function Page() {
     const [addresses, setAddresses] = useState(user?.addresses || []);
     const [selectedAddress, setSelectedAddress] = useState("");
     const [editingAddress, setEditingAddress] = useState(null);
+    const [paymentLoading, setPaymentLoading] = useState(false);
 
     useEffect(() => {
         // Wait until authentication has finished loading.
@@ -205,10 +206,10 @@ export default function Page() {
         }));
     };
 
-    const handleContinue = (event) => {
+    const handleContinue = async (event) => {
         event.preventDefault();
 
-        if (cartLoading) return;
+        if (paymentLoading || cartLoading) return;
 
         if (!cartItems.length) {
             alert("Your cart is empty.");
@@ -222,7 +223,116 @@ export default function Page() {
             return;
         }
 
-        alert("Address selected. Payment integration will be added next.");
+        setPaymentLoading(true);
+
+        try {
+            // Load Razorpay Checkout when needed.
+            if (!window.Razorpay) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement("script");
+                    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+                    script.onload = resolve;
+                    script.onerror = () =>
+                        reject(new Error("Unable to load Razorpay Checkout."));
+                    document.body.appendChild(script);
+                });
+            }
+
+            // Create the order on the server. Prices are calculated from MongoDB.
+            const { data: orderData } = await axios.post(
+                "/api/user/orders/create",
+                { addressId: String(activeAddress._id) }
+            );
+
+            const options = {
+                key: orderData.keyId,
+                amount: orderData.amount,
+                currency: orderData.currency,
+                name: "Solvestic",
+                description: `Order ${orderData.orderNumber}`,
+                order_id: orderData.razorpayOrderId,
+
+                prefill: {
+                    name: activeAddress.fullName || user.name || "",
+                    email: user.email || "",
+                    contact: activeAddress.mobile || user.mobile || "",
+                },
+
+                theme: {
+                    color: "#7D45C2",
+                },
+
+                handler: async (response) => {
+                    try {
+                        const { data: verification } = await axios.post(
+                            "/api/user/orders/verify-payment",
+                            {
+                                orderId: orderData.orderId,
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                            }
+                        );
+
+                        if (!verification.success) {
+                            alert(
+                                "Payment verification is pending. Please check your orders before trying again."
+                            );
+                            return;
+                        }
+
+                        router.push(
+                            `/orders/${verification.orderId}`
+                        );
+                    } catch (error) {
+                        console.error(
+                            "Payment verification error:",
+                            error.response?.data || error.message
+                        );
+
+                        alert(
+                            "We could not confirm payment yet. Please check your orders before attempting another payment."
+                        );
+                    } finally {
+                        setPaymentLoading(false);
+                    }
+                },
+
+                modal: {
+                    ondismiss: () => {
+                        setPaymentLoading(false);
+                    },
+                },
+            };
+
+            const checkout = new window.Razorpay(options);
+
+            checkout.on("payment.failed", (response) => {
+                console.error("Razorpay payment failed:", response.error);
+
+                alert(
+                    response.error?.description ||
+                    "Payment failed. Please try again."
+                );
+
+                setPaymentLoading(false);
+            });
+
+            checkout.open();
+        } catch (error) {
+            console.error(
+                "Checkout error:",
+                error.response?.data || error.message
+            );
+
+            alert(
+                error.response?.data?.message ||
+                error.message ||
+                "Unable to start payment. Please try again."
+            );
+
+            setPaymentLoading(false);
+        }
     };
 
     if (isLoading) {
@@ -635,13 +745,22 @@ export default function Page() {
                                         </p>
                                     </div>
 
+
                                     <button
                                         type="submit"
+                                        disabled={paymentLoading || cartLoading || !cartItems.length}
                                         className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7D45C2] px-5 py-4 text-sm font-semibold text-white transition hover:bg-[#6936AC] disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                        Continue to Payment
-                                        <ArrowRight size={17} />
+                                        {paymentLoading ? (
+                                            "Processing..."
+                                        ) : (
+                                            <>
+                                                Continue to Payment
+                                                <ArrowRight size={17} />
+                                            </>
+                                        )}
                                     </button>
+
 
                                     <div className="mt-4 flex items-center justify-center gap-2 text-xs text-[#88818F]">
                                         <ShieldCheck
