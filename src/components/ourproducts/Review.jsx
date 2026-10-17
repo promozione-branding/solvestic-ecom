@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import ProductReviewForm from "./ProductReviewForm";
+import Link from "next/link";
 
 const PURPLE = "#7D45C2";
 
@@ -75,7 +76,7 @@ function StarRating({ rating = 0, size = 15 }) {
     );
 }
 
-export default function ReviewsSection({ productId }) {
+export default function ReviewsSection({ productId, user, slug }) {
     const [reviews, setReviews] = useState([]);
     const [summary, setSummary] = useState({
         averageRating: 0,
@@ -207,7 +208,14 @@ export default function ReviewsSection({ productId }) {
 
                                 <button
                                     type="button"
-                                    onClick={() => setReviewOpen(true)}
+                                    onClick={() => {
+                                        if (!user) {
+                                            window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+                                            return;
+                                        }
+
+                                        setReviewOpen(true);
+                                    }}
                                     className="mt-5 rounded-full bg-[#7D45C2] px-6 py-3 text-sm font-medium text-white hover:bg-[#6736a6]"
                                 >
                                     Write the first review
@@ -399,7 +407,14 @@ export default function ReviewsSection({ productId }) {
                             <div className="mt-8 space-y-3 border-t border-[#7D45C2]/15 pt-6">
                                 <button
                                     type="button"
-                                    onClick={() => setReviewOpen(true)}
+                                    onClick={() => {
+                                        if (!user) {
+                                            window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+                                            return;
+                                        }
+
+                                        setReviewOpen(true);
+                                    }}
                                     className="group flex w-full items-center justify-center gap-2 rounded-full bg-[#7D45C2] px-6 py-4 text-sm font-medium text-white transition hover:bg-[#6736a6]"
                                 >
                                     <Star size={17} />
@@ -410,13 +425,13 @@ export default function ReviewsSection({ productId }) {
                                     />
                                 </button>
 
-                                <a
-                                    href="/reviews"
+                                <Link
+                                    href={`${slug}/reviews`}
                                     className="flex w-full items-center justify-center gap-2 rounded-full border border-[#7D45C2]/25 bg-white px-6 py-4 text-sm font-medium text-[#7D45C2] transition hover:bg-[#7D45C2]/5"
                                 >
                                     Read All Reviews
                                     <ArrowUpRight size={17} />
-                                </a>
+                                </Link>
                             </div>
 
                             <p className="mt-4 text-center text-[10px] leading-5 text-[#89818f]">

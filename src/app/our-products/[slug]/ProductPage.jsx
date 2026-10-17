@@ -23,6 +23,7 @@ import { addToGuestCart } from "@/lib/cart-storage";
 import { Check, ChevronLeft, ChevronRight, Heart, Minus, Plus, ShoppingBag, Star } from "lucide-react";
 import TextureDetailsSection from "@/components/ourproducts/TextureDetailsSection";
 import ReviewsSection from "@/components/ourproducts/Review";
+import { useSelector } from "react-redux";
 
 const WISHLIST_KEY = "solvestic_wishlist";
 
@@ -75,6 +76,7 @@ const getSpecifications = (product) =>
 const getVariantName = (variant) => String(variant?.size || variant?.name || "");
 
 export default function ProductPage({ initialProduct, slug }) {
+    const { user } = useSelector((state) => state.auth);
     const router = useRouter();
     const product = initialProduct;
     const productId = getProductId(product);
@@ -1138,7 +1140,7 @@ export default function ProductPage({ initialProduct, slug }) {
 
             <TextureDetailsSection />
 
-            <ReviewsSection productId={product._id.toString()} />
+            <ReviewsSection slug={slug} productId={product._id.toString()} user={user} />
         </main>
     );
 }
