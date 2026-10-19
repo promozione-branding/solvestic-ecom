@@ -83,22 +83,15 @@ export default function ProductPage({ initialProduct, slug }) {
     const productId = getProductId(product);
     const images = useMemo(() => getProductImages(product), [product]);
     const variants = Array.isArray(product?.variants) ? product.variants : [];
-    const specifications = getSpecifications(product);
-    const [selectedImage, setSelectedImage] = useState(0);
     const [selectedVariant, setSelectedVariant] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState("description");
     const [wishlist, setWishlist] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [adding, setAdding] = useState(false);
     const [notice, setNotice] = useState("");
-
+    const [routineOptions, setRoutineOptions] = useState({});
+    const [addingRoutine, setAddingRoutine] = useState(false);
     const [selectedRoutine, setSelectedRoutine] = useState([]);
-    const [routineOptions, setRoutineOptions] = useState({
-        bronze: "sunbed",
-        lipShape: "twist",
-        lipTint: "salty tan",
-    });
 
     const [allProducts, setAllProducts] = useState([]);
     useEffect(() => {
@@ -148,38 +141,37 @@ export default function ProductPage({ initialProduct, slug }) {
                     String(item._id || item.id)
             )
         ),
-    ]
-        .slice(0, 2)
-        .map((item) => {
-            const variants = Array.isArray(item.variants)
-                ? item.variants
-                : [];
+    ].slice(0, 2).map((item) => {
+        const variants = Array.isArray(item.variants)
+            ? item.variants
+            : [];
 
-            const firstImage = item.images?.[0];
+        const firstImage = item.images?.[0];
 
-            return {
-                id: String(item._id || item.id),
-                name: item.name || "Product",
-                description:
-                    item.shortDescription ||
-                    item.description ||
-                    "Discover this product.",
-                price: Number(
-                    variants[0]?.price ?? item.price ?? item.salePrice ?? 0
-                ),
-                image:
-                    (typeof firstImage === "string"
-                        ? firstImage
-                        : firstImage?.url) ||
-                    item.imageUrl ||
-                    item.thumbnail ||
-                    item.image ||
-                    "/placeholder.png",
-                options: variants
-                    .map((variant) => variant.size || variant.name)
-                    .filter(Boolean),
-            };
-        });
+        return {
+            id: String(item._id || item.id),
+            name: item.name || "Product",
+            description:
+                item.shortDescription ||
+                item.description ||
+                "Discover this product.",
+            price: Number(
+                variants[0]?.price ?? item.price ?? item.salePrice ?? 0
+            ),
+            image:
+                (typeof firstImage === "string"
+                    ? firstImage
+                    : firstImage?.url) ||
+                item.imageUrl ||
+                item.thumbnail ||
+                item.image ||
+                "/placeholder.png",
+            options: variants
+                .map((variant) => variant.size || variant.name)
+                .filter(Boolean),
+        };
+    });
+
     const selectedRoutineTotal = routineProducts
         .filter((item) => selectedRoutine.includes(item.id))
         .reduce((total, item) => total + item.price, 0);
@@ -192,7 +184,7 @@ export default function ProductPage({ initialProduct, slug }) {
     const shortDescription = product?.shortDescription || product?.description || "";
 
     useEffect(() => {
-        setSelectedImage(0);
+        // setSelectedImage(0);
         setSelectedVariant(0);
         setQuantity(1);
         setActiveTab("description");
@@ -313,7 +305,7 @@ export default function ProductPage({ initialProduct, slug }) {
     };
 
     if (!product) return null;
-
+    console.log(routineProducts)
     return (
         <main className="min-h-screen bg-[#fffdfb] text-[#28232f]">
             <div className="mx-auto max-w-[1440px] px-5 pb-5 pt-6 sm:px-8 lg:px-12">
@@ -718,28 +710,58 @@ export default function ProductPage({ initialProduct, slug }) {
 
                             <button
                                 type="button"
-                                disabled={selectedRoutine.length === 0}
-                                onClick={() => {
+                                disabled={selectedRoutine.length === 0 || addingRoutine}
+                                onClick={async () => {
                                     const selected = routineProducts.filter((item) =>
                                         selectedRoutine.includes(item.id)
                                     );
 
-                                    const message = selected
-                                        .map((item) => {
-                                            const option = routineOptions[item.id];
-                                            return `${item.name}${option ? ` (${option})` : ""}`;
-                                        })
-                                        .join(", ");
+                                    if (!selected.length) {
+                                        toast.error("Please select at least one product.");
+                                        return;
+                                    }
 
-                                    // Pass the selected routine to your existing cart flow.
-                                    // Replace this with your bulk-add cart handler when available.
-                                    setNotice(
-                                        `Selected: ${message}. Connect these products to your cart to add them together.`
-                                    );
+                                    const loadingToast = toast.loading("Adding routine to cart...");
+                                    setAddingRoutine(true);
+
+                                    try {
+                                        for (const item of selected) {
+                                            const option =
+                                                routineOptions[item.id] ||
+                                                item.options?.[0] ||
+                                                "";
+
+                                            await axios.post("/api/user/cart", {
+                                                productId: item.id,
+                                                quantity: 1,
+                                                variant: option,
+                                            });
+                                        }
+
+                                        window.dispatchEvent(new Event("solvestic-cart-updated"));
+
+                                        toast.success("Routine added to cart successfully!", {
+                                            id: loadingToast,
+                                        });
+
+                                        router.push("/cart");
+                                    } catch (error) {
+                                        console.error("Add routine to cart error:", error);
+
+                                        toast.error(
+                                            error.response?.data?.message ||
+                                            "Unable to add routine to cart.",
+                                            { id: loadingToast }
+                                        );
+                                    } finally {
+                                        setAddingRoutine(false);
+                                    }
                                 }}
                                 className="flex min-h-[52px] items-center justify-between gap-8 rounded-full bg-[#7D45C2] px-6 text-sm font-medium text-white transition hover:bg-[#6936aa] disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                                <span>Add routine to cart</span>
+                                <span>
+                                    {addingRoutine ? "Adding routine..." : "Add routine to cart"}
+                                </span>
                                 <span>{formatPrice(selectedRoutineTotal)}</span>
                             </button>
                         </div>

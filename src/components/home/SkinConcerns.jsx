@@ -16,7 +16,7 @@ const concerns = [
     },
     {
         title: "Dullness",
-        image: "/skin/14.jpg",
+        image: "/skin/14.png",
         description:
             "Dull skin can make your complexion look tired, flat, and lacking in its natural radiance. It may leave your skin looking uneven and less refreshed, reducing its healthy, glowing appearance.",
         color: "#D8D1EE",
