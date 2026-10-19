@@ -18,64 +18,66 @@ import "swiper/css/pagination";
 
 const products = [
     {
-        name: "Activator Shampoo",
+        main: "Instant Radiance",
+        name: "Rapid Pigment-Correcting Face Cleanser",
         image: "/products/5.png",
         tagline: "Make every wash a moment of care.",
-        subtitle: "Your hair-care ritual, thoughtfully reimagined.",
+        subtitle: "Natural beauty shines. Reveal your skin and refresh your routine.",
         benefits: [
             {
-                title: "Strengthen Roots",
-                description: "Strengthens hair follicles for lasting resilience.",
+                title: "Efficient Cleaning",
+                description: "Helps remove dirt, excess oil and impurities for a fresh, clean feel.",
                 icon: Sprout,
                 position: "top-left",
             },
             {
-                title: "Reduce Hair Fall",
-                description: "Helps minimize shedding while supporting scalp health.",
+                title: "Illuminating",
+                description: "Dimness and skin color irregularity can be helped with Niacinamide and Glycolic Acid.",
                 icon: ShieldCheck,
                 position: "top-right",
             },
             {
-                title: "Stimulate Growth",
-                description: "Supports healthy-looking hair with botanical care.",
+                title: "Nourishing and Soothing",
+                description: "Smooth, comfortable, soft skin with D-Panthenol and Betaine.",
                 icon: Sparkles,
                 position: "bottom-left",
             },
             {
-                title: "Enhance Volume",
-                description: "Helps hair look fuller, bouncier, and energized.",
+                title: "Designed to Refresh",
+                description: "With a soft, creamy texture and easily rinsable, perfect to use daily for cleaning and preparing skin.",
                 icon: Droplets,
                 position: "bottom-right",
             },
         ],
     },
     {
-        name: "Hair Growth Serum",
-        image: "/products/6.png",
+        main: "Add Bounce To Your Glow",
+        name: "Rapid Pigment Correcting Bouncy Moisturiser",
+        image: "/products/7.webp",
         tagline: "Give your hair the care it deserves.",
         subtitle: "A thoughtful addition to your hair-care ritual.",
         benefits: [
             {
-                title: "Nourish Scalp",
-                description: "Supports a nourished scalp with targeted care.",
+                title: "Deep Hydration",
+                description: "Replenishes moisture to promote soft, supple-looking skin.",
                 icon: Sprout,
                 position: "top-left",
             },
             {
-                title: "Healthy-Looking Hair",
-                description: "Helps maintain a smooth, healthy-looking appearance.",
+                title: "Brighten Up Dullness",
+                description: "Reduces the appearance of dull skin and uneven skin tone.",
                 icon: ShieldCheck,
                 position: "top-right",
             },
             {
-                title: "Support Hair Growth",
-                description: "Complements your daily hair-care routine.",
+                title: "Barrier Care",
+                description: "Helps the skin retain moisture by filling the gaps in the skin barrier with ceramides.",
                 icon: Sparkles,
                 position: "bottom-left",
             },
             {
-                title: "Lightweight Care",
-                description: "Adds an easy step to your hair-care ritual.",
+                title: "Easy Breezy Care",
+                description: "Bouncy gel formula absorbs quickly for lightweight hydration with no sticky feel.",
                 icon: Droplets,
                 position: "bottom-right",
             },
@@ -130,10 +132,10 @@ export default function ActivatorSection() {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: false }}
                                 transition={{ duration: 0.7 }}
-                                className="relative z-10 mx-auto mb-10 max-w-4xl text-center"
+                                className="relative z-10 mx-auto mb-10 max-w-5xl text-center"
                             >
-                                <h2 className="text-3xl font-medium leading-[1] tracking-[-0.02em] text-[#24252a] sm:text-5xl lg:text-[60px]">
-                                    Boost Your Confidence with
+                                <h2 className="text-3xl font-medium leading-[1] tracking-[-0.02em] text-[#24252a] sm:text-5xl lg:text-[45px]">
+                                    {product.main}
                                     <span className="mt-2 block text-[#7D45C2]">
                                         {product.name}
                                     </span>
@@ -245,7 +247,7 @@ export default function ActivatorSection() {
                                                 viewport={{ once: false }}
                                                 transition={{ delay: index * 0.12 }}
                                                 whileHover={{ y: -5, scale: 1.02 }}
-                                                className={`group rounded-2xl border border-white/80 bg-white/80 p-4 shadow-[0_8px_25px_rgba(77,117,85,0.06)] backdrop-blur-md transition-colors duration-300 hover:bg-white sm:p-5 lg:absolute lg:w-[245px] ${cardPositions[benefit.position]}`}
+                                                className={`group rounded-2xl border border-white/80 bg-white/80 p-4 shadow-[0_8px_25px_rgba(77,117,85,0.06)] backdrop-blur-md transition-colors duration-300 hover:bg-white sm:p-5 lg:absolute lg:w-[300px] ${cardPositions[benefit.position]}`}
                                             >
                                                 <div className="flex items-start justify-between gap-3">
                                                     <h3 className="text-base font-medium tracking-wide text-[#303831] sm:text-lg">
