@@ -430,7 +430,7 @@ export default function ProductPage({ initialProduct, slug }) {
                                         : product?.category || "SOLVESTIC"}
                             </p>
 
-                            <h1 className="break-words text-4xl font-medium leading-[1.05] tracking-[-0.055em] text-[#28222e] sm:text-5xl xl:text-6xl">
+                            <h1 className="break-words text-[40px] font-bold leading-[1] tracking-[-0.015em] text-[#28222e]">
                                 {product?.name}
                             </h1>
                         </div>
@@ -785,11 +785,11 @@ export default function ProductPage({ initialProduct, slug }) {
                         transition={{ duration: 0.7, ease: "easeOut" }}
                         className="order-2 lg:order-1"
                     >
-                        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#7D45C2]">
+                        <p className="text-xs mb-2 font-semibold uppercase tracking-[0.1em] text-[#7D45C2]">
                             The details
                         </p>
 
-                        <h2 className="max-w-lg text-4xl font-medium leading-tight tracking-[-0.045em] text-[#28222e] sm:text-5xl">
+                        <h2 className="max-w-xl text-4xl font-medium leading- tracking-[-0.015em] text-[#28222e] sm:text-[40px]">
                             Everything you need to know.
                         </h2>
 
@@ -850,18 +850,6 @@ export default function ProductPage({ initialProduct, slug }) {
                                 transition={{ duration: 0.7, ease: "easeOut" }}
                                 className="h-full w-full object-contain"
                             />
-
-                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#21172f]/25 via-transparent to-transparent" />
-
-                            <div className="absolute bottom-5 left-5 right-5 rounded-xl border border-white/30 bg-white/75 p-3 backdrop-blur-md sm:bottom-2 sm:left-7 sm:right-7">
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7D45C2]">
-                                    Solvestic essentials
-                                </p>
-
-                                <h3 className="text-xl font-medium tracking-tight text-[#302936] sm:text-2xl">
-                                    {product?.name}
-                                </h3>
-                            </div>
                         </div>
                     </motion.div>
                 </div>
@@ -889,9 +877,9 @@ export default function ProductPage({ initialProduct, slug }) {
                                     className="h-full w-full object-contain"
                                 />
 
-                                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+                                {/* <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" /> */}
 
-                                <div className="absolute bottom-6 left-6 right-6 text-white sm:bottom-8 sm:left-8">
+                                {/* <div className="absolute bottom-6 left-6 right-6 text-white sm:bottom-8 sm:left-8">
                                     <p className="text-xs font-medium uppercase tracking-[0.22em]">
                                         Discover Solvestic
                                     </p>
@@ -899,7 +887,7 @@ export default function ProductPage({ initialProduct, slug }) {
                                     <h2 className="mt-3 text-3xl font-medium leading-tight tracking-tight sm:text-4xl">
                                         {product?.name}
                                     </h2>
-                                </div>
+                                </div> */}
                             </div>
                         </motion.div>
 
@@ -1020,10 +1008,9 @@ export default function ProductPage({ initialProduct, slug }) {
             )}
 
             {/* PRODUCT RESULTS / BENEFITS */}
-            <section className="overflow-hidden bg-gradient-to-br from-[#eee7f5] to-[#f8f6fa] px-5 py-10 sm:px-8 sm:py-12 lg:px-12 lg:py-15">
+            {/* <section className="overflow-hidden bg-gradient-to-br from-[#eee7f5] to-[#f8f6fa] px-5 py-10 sm:px-8 sm:py-12 lg:px-12 lg:py-15">
                 <div className="mx-auto max-w-7xl">
                     <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-                        {/* LEFT: CONTENT */}
                         <motion.div
                             initial={{ opacity: 0, x: -30 }}
                             whileInView={{ opacity: 1, x: 0 }}
@@ -1039,7 +1026,6 @@ export default function ProductPage({ initialProduct, slug }) {
                                 <span className="text-[#7D45C2]"> backed by confidence.</span>
                             </h2>
 
-                            {/* BENEFIT STATS */}
                             <div className="mt-8 space-y-6">
                                 {[
                                     {
@@ -1113,7 +1099,6 @@ export default function ProductPage({ initialProduct, slug }) {
                             </p>
                         </motion.div>
 
-                        {/* RIGHT: IMAGE */}
                         <motion.div
                             initial={{ opacity: 0, x: 30, scale: 0.97 }}
                             whileInView={{ opacity: 1, x: 0, scale: 1 }}
@@ -1128,32 +1113,14 @@ export default function ProductPage({ initialProduct, slug }) {
                                     className="h-full w-full object-cover"
                                 />
 
-                                {/* Subtle overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-[#241331]/30 via-transparent to-transparent" />
-
-                                {/* Image caption */}
-                                {/* <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-white/30 bg-white/85 p-5 backdrop-blur-md sm:bottom-7 sm:left-7 sm:right-7 sm:p-6">
-                                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#7D45C2]">
-                                        Your daily glow ritual
-                                    </p>
-
-                                    <h3 className="mt-2 text-xl font-medium tracking-tight text-[#28222e] sm:text-2xl">
-                                        Healthy-looking skin starts here.
-                                    </h3>
-
-                                    <p className="mt-2 text-xs leading-5 text-[#716a78] sm:text-sm">
-                                        A radiant finish. A refreshed feel. A routine
-                                        that feels like you.
-                                    </p>
-                                </div> */}
                             </div>
 
-                            {/* Decorative accent */}
                             <div className="pointer-events-none absolute -right-3 -top-3 -z-10 h-32 w-32 rounded-full bg-[#7D45C2]/15 blur-2xl sm:-right-6 sm:-top-6 sm:h-48 sm:w-48" />
                         </motion.div>
                     </div>
                 </div>
-            </section>
+            </section> */}
 
             <TextureDetailsSection />
 

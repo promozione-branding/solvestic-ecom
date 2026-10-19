@@ -107,14 +107,11 @@ export default function HeroSection() {
                                             Discover Solvestic
                                         </span>
 
-                                        <h1 className="text-4xl font-semibold leading-[1.12] tracking-tight text-[#20152B] sm:text-5xl lg:text-6xl xl:text-7xl">
+                                        <h1 className="text-4xl font-semibold leading-[1] tracking-tight text-[#20152B] sm:text-5xl lg:text-6xl">
                                             {typedText}
-                                            {/* <span className="typing-cursor ml-1 inline-block text-[#7D45C2]">
-                                                |
-                                            </span> */}
                                         </h1>
 
-                                        <p className="mt-2 max-w-md text-sm leading-7 text-[#51465B] sm:text-base sm:leading-8">
+                                        <p className="mt-2 max-w-md text-sm leading-7 text-[#4b2f67] sm:text-base sm:leading-8">
                                             Elevate your everyday routine with
                                             thoughtfully crafted beauty and
                                             body care essentials designed to

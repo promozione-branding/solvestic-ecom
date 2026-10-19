@@ -30,11 +30,12 @@ export const metadata = {
   description: "Solvestic",
 };
 
+
 export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${bebasNeue.variable} ${geistSans.variable} ${inter.variable}`}
+      className={`${geistSans.variable} ${inter.variable}`}
     >
       <body className="min-h-screen flex flex-col">
         <ReduxProvider>

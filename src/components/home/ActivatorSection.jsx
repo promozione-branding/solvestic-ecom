@@ -130,9 +130,9 @@ export default function ActivatorSection() {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: false }}
                                 transition={{ duration: 0.7 }}
-                                className="relative z-10 mx-auto mb-10 max-w-3xl text-center"
+                                className="relative z-10 mx-auto mb-10 max-w-4xl text-center"
                             >
-                                <h2 className="text-3xl font-medium leading-[1.12] tracking-[-0.02em] text-[#24252a] sm:text-5xl lg:text-[60px]">
+                                <h2 className="text-3xl font-medium leading-[1] tracking-[-0.02em] text-[#24252a] sm:text-5xl lg:text-[60px]">
                                     Boost Your Confidence with
                                     <span className="mt-2 block text-[#7D45C2]">
                                         {product.name}

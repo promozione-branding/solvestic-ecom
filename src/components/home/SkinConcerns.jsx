@@ -84,7 +84,7 @@ export default function SkinConcernsSection() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: false, amount: 0.4 }}
                     transition={{ duration: 0.7, ease: "easeOut" }}
-                    className="mb-8 flex items-end justify-between gap-5 px-5 sm:mb-12 sm:px-8 lg:px-12"
+                    className="mb-8 flex items-end justify-between gap-5 px-5 sm:mb-10 sm:px-8 lg:px-12"
                 >
                     <div>
                         <p className="mb-3 flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.28em] text-[#7D45C2] sm:text-xs">
@@ -92,11 +92,11 @@ export default function SkinConcernsSection() {
                             Your skin, your story
                         </p>
 
-                        <h2 className="max-w-3xl text-[30px] font-light leading-[1.15] tracking-[0.01em] text-[#252329] sm:text-4xl lg:text-[52px]">
-                            Skin concerns,{" "}
-                            <span className="text-[#7D45C2]">
+                        <h2 className="text-[30px] flex gap-1 font-light leading-[1] tracking-[0.01em] text-[#252329] sm:text-4xl lg:text-[52px]">
+                            Skin concerns, {" "}
+                            <h2 className="text-[#7D45C2]">
                                 meet thoughtful care.
-                            </span>
+                            </h2>
                         </h2>
                     </div>
                 </motion.div>

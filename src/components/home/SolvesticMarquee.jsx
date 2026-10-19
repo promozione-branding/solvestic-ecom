@@ -15,11 +15,6 @@ const marqueeItems = [
         icon: "✦",
     },
     {
-        normal: "Your Daily",
-        bold: "Glow Ritual",
-        icon: "✳",
-    },
-    {
         normal: "Care Beyond",
         bold: "The Surface",
         icon: "✦",
@@ -43,7 +38,7 @@ function MarqueeContent() {
                     </span>
 
                     {/* Text */}
-                    <div className="flex shrink-0 items-center gap-2 whitespace-nowrap font-['Roboto',sans-serif] text-[24px] font-light tracking-[-0.035em] text-black sm:text-[30px] lg:text-[38px]">
+                    <div className="flex shrink-0 items-center gap-2 whitespace-nowrap text-[24px] font-light tracking-[-0.015em] text-black sm:text-[30px]">
                         <span>{item.normal}</span>
                         <strong className="font-semibold">
                             {item.bold}

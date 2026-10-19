@@ -131,11 +131,11 @@ export default function TextureDetailsSection() {
                         Inside the formula
                     </span>
 
-                    <h2 className="text-4xl font-light leading-tight tracking-[-0.01em] sm:text-5xl lg:text-7xl">
+                    <h2 className="text-4xl mt-2 font-light tracking-[-0.01em] sm:text-5xl lg:text-7xl">
                         Science meets {" "}
-                        <span className="text-[#7D45C2]">
+                        <h2 className="text-[#7D45C2] -mt-2">
                             self-care.
-                        </span>
+                        </h2>
                     </h2>
                 </motion.div>
 

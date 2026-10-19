@@ -95,7 +95,7 @@ export default function Home() {
       {/* <WhyChooseUs /> */}
       <FounderReels />
       {/* <FAQSection /> */}
-      <GuessNewLaunch />
+      {/* <GuessNewLaunch /> */}
       {/* <Jointcommunity /> */}
     </>
   );

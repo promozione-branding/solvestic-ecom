@@ -110,14 +110,14 @@ export default function Register() {
             <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full border border-white/15" />
             <div className="absolute -bottom-24 -left-20 h-96 w-96 rounded-full border border-white/15" />
 
-            <Link href="/" className="relative z-10 inline-block">
+            <Link href="/" className="relative z-10 flex justify-center items-center">
               <Image
-                src="/logo/solvestic.png"
+                src="/logo/solve.png"
                 alt="Solvestic"
-                width={180}
-                height={55}
+                width={200}
+                height={90}
                 priority
-                className="h-auto max-h-14 w-auto object-contain"
+                className="h-auto w-auto object-contain"
               />
             </Link>
 

@@ -150,20 +150,20 @@ export default function ReviewsSection({ productId, user, slug }) {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
-                    className="mb-8 max-w-2xl"
+                    className="mb-8 max-w-3xl"
                 >
                     <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#7D45C2]">
                         Love from our community
                     </p>
 
-                    <h2 className="mt-3 text-3xl font-medium leading-tight tracking-[-0.015em] text-[#28222e] sm:text-5xl">
-                        Real routines.{" "}
-                        <span className="text-[#7D45C2]">
+                    <h2 className="mt-1 text-3xl flex gap-1 font-medium leading-tight tracking-[-0.015em] text-[#28222e] sm:text-5xl">
+                        Real routines. {" "}
+                        <h2 className="text-[#7D45C2]">
                             Radiant reviews.
-                        </span>
+                        </h2>
                     </h2>
 
-                    <p className="mt-3 max-w-xl text-sm leading-7 text-[#716a78] sm:text-base">
+                    <p className="mt-1 max-w-xl text-sm leading-7 text-[#716a78] sm:text-base">
                         Discover what customers are saying about their
                         Solvestic skincare experience.
                     </p>
