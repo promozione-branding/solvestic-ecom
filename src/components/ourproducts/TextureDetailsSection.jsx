@@ -100,7 +100,7 @@ const productDetails = {
                     "Leaves skin soft, smooth and supple",
                     "Comfortable for everyday moisturising",
                 ],
-                marker: { top: "28%", left: "43.5%" },
+                marker: { top: "23%", left: "42%" },
                 imageLabel: "Bouncy Gel Texture",
             },
             {
@@ -116,7 +116,7 @@ const productDetails = {
                     "Alpha Arbutin — targets the look of uneven pigmentation",
                     "Supports a healthier, balanced-looking complexion",
                 ],
-                marker: { top: "30%", left: "60%" },
+                marker: { top: "28%", left: "57%" },
                 imageLabel: "Brightening Complex",
             },
             {
@@ -133,7 +133,7 @@ const productDetails = {
                     "Helps maintain long-lasting hydration",
                     "Supports a healthy-looking skin barrier",
                 ],
-                marker: { top: "69%", left: "34%" },
+                marker: { top: "67%", left: "36%" },
                 imageLabel: "Hydration & Barrier",
             },
             {
@@ -150,7 +150,7 @@ const productDetails = {
                     "Follow with sunscreen during the day",
                     "50 ml / 1.69 fl. oz.",
                 ],
-                marker: { top: "70%", left: "64%" },
+                marker: { top: "71%", left: "64%" },
                 imageLabel: "Daily Moisturising",
             },
         ],
