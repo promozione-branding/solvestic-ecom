@@ -45,7 +45,7 @@ const BRAND = {
 // ============================================================
 
 const ANNOUNCEMENTS = [
-    "COMPLIMENTARY SHIPPING ON ORDERS OVER ₹x,xxx",
+    "FREE SHIPPING",
     "DERMATOLOGICALLY TESTED",
     "SULPHATE & PARABEN FREE",
     "CRUELTY-FREE BEAUTY",
