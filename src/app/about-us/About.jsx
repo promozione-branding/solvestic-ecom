@@ -1,149 +1,286 @@
 "use client";
-
 import React from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
+
+const paragraphs = [
+  "As I stepped into a new chapter of my life, like any girl, I wanted to feel beautiful, confident, and comfortable in my own skin.",
+
+  "I explored skincare with the same curiosity so many of us do — trying products, discovering brands, and trusting what seemed right.",
+
+  "But one experience changed the way I looked at skincare entirely. What began as a simple attempt to care for my skin left me dealing with a skin concern I had never experienced before.",
+
+  "I felt frustrated, overwhelmed, and, for a while, even hesitant to step outside.",
+
+  "More than the skin concern itself, it made me question how easily we trust what we put on our skin — and how difficult it can be to know what is actually right for us.",
+];
+
+const fadeUp = {
+  hidden: {
+    opacity: 0,
+    y: 35,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.7,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+const paragraphs1 = [
+  "We wanted to create skincare differently — with transparency at the centre of every decision.",
+
+  "We wanted to understand skin concerns properly before trying to create solutions for them.",
+
+  "No unnecessary promises, no trying to make skincare complicated, and no building something simply because it sounds good.",
+];
 
 export default function About() {
   return (
-    <section className="w-full bg-white mt-2 text-[#26244F]">
+    <section className="w-full bg-white text-[#26244F]">
 
       {/* =====================================================
           HERO / INTRO
       ===================================================== */}
-      <div className="px-3 pt-3 sm:px-5 sm:pt-5">
-        <div className="relative min-h-[320px] overflow-hidden rounded-[24px] bg-[#7b44bf] sm:min-h-[510px] ">
-
+      <div className="">
+        <div className="relative min-h-[320px] overflow-hidden bg-[#7b44bf] sm:min-h-[510px] ">
           {/* Replace with your Solvestic image */}
           <img
-            src="/aboutban2.webp"
+            src="/about-banner.png"
             alt="Solvestic story"
             className="absolute inset-0 h-full w-full object-cover"
           />
-
-          {/* subtle overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-
-          <div className="absolute bottom-1 md:bottom-7 left-6 right-6 flex items-end justify-between gap-5 text-white sm:bottom-10 sm:left-10 sm:right-10">
-            <div>
-
-
-
-            </div>
-
-            <div className=" text-lg text-right md:text-4xl  sm:flex">
-              Build From
-              Personal  <br /> Experience
-
-            </div>
-          </div>
         </div>
       </div>
 
       {/* =====================================================
           STORY INTRO
       ===================================================== */}
-      <div className="px-5 py-7 sm:px-10 sm:py-12">
-        <div className="mx-auto max-w-[850px] text-center">
+      <section className="relative overflow-hidden bg-[#F7F2FC]">
+        <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-10 sm:py-20 lg:px-16 lg:py-28">
+          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-24">
 
-          <p className="mb-4 md:mb-8 text-[10px] uppercase tracking-[0.2em] text-[#8E91C4]">
-            A STORY FROM SKIN
-          </p>
+            {/* LEFT CONTENT */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ staggerChildren: 0.12 }}
+              className="order-2 lg:order-1"
+            >
+              <motion.p
+                variants={fadeUp}
+                className="mb-5 text-[11px] font-medium uppercase tracking-[0.25em] text-[#8E91C4]"
+              >
+                A STORY FROM SKIN
+              </motion.p>
 
-          <h2 className="font-serif text-4xl text-black leading-[1.05] sm:text-5xl lg:text-6xl">
-            It all started with a personal experience.
-          </h2>
+              <motion.h2
+                variants={fadeUp}
+                className="max-w-[650px] font-serif text-4xl leading-[1.12] text-[#191919] sm:text-5xl lg:text-[54px] xl:text-[60px]"
+              >
+                It all started with a{" "}
+                <span className="italic text-[#7D45C2]">
+                  personal experience.
+                </span>
+              </motion.h2>
 
-          <div className="mt-5 md:mt-10 space-y-4 md:space-y-6 text-sm leading-[1.9] text-black sm:text-base">
-            <p>
-              As I stepped into a new chapter of my life, like any girl, I
-              wanted to feel beautiful, confident, and comfortable in my own
-              skin.
-            </p>
+              <div className="mt-7 space-y-4 md:mt-9 md:space-y-5">
+                {paragraphs.map((paragraph, index) => (
+                  <motion.p
+                    key={index}
+                    variants={fadeUp}
+                    className="text-sm leading-[1.9] text-[#484454] sm:text-[15px]"
+                  >
+                    {paragraph}
+                  </motion.p>
+                ))}
+              </div>
 
-            <p>
-              I explored skincare with the same curiosity so many of us do —
-              trying products, discovering brands, and trusting what seemed
-              right.
-            </p>
+              <motion.div
+                variants={fadeUp}
+                className="mt-9 border-l-[3px] border-[#7D45C2] pl-5 md:mt-12"
+              >
+                <p className="font-serif text-xl italic leading-relaxed text-[#26244F] sm:text-2xl">
+                  “Understand first. Act second. Always.”
+                </p>
+              </motion.div>
+            </motion.div>
 
-            <p>
-              But one experience changed the way I looked at skincare entirely.
-              What began as a simple attempt to care for my skin left me
-              dealing with a skin concern I had never experienced before.
-            </p>
+            {/* RIGHT IMAGE */}
+            <motion.div
+              initial={{ opacity: 0, x: 80, scale: 0.95 }}
+              whileInView={{
+                opacity: 1,
+                x: 0,
+                scale: 1,
+              }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{
+                duration: 1,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="relative order-1 lg:order-2"
+            >
+              {/* Decorative background */}
+              <div className="absolute -right-5 -top-5 h-full w-full rounded-[30px] border border-[#7D45C2]/20 sm:-right-7 sm:-top-7" />
 
-            <p>
-              I felt frustrated, overwhelmed, and, for a while, even hesitant
-              to step outside.
-            </p>
+              <div className="group relative aspect-[4/5] w-full overflow-hidden rounded-[30px] bg-[#EDE5F8] sm:aspect-[5/6] lg:aspect-[4/5]">
+                <Image
+                  src="/about.jpg"
+                  alt="The personal skincare journey behind Solvestic"
+                  fill
+                  priority={false}
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105"
+                />
 
-            <p>
-              More than the skin concern itself, it made me question how easily
-              we trust what we put on our skin — and how difficult it can be to
-              know what is actually right for us.
-            </p>
-          </div>
+                {/* Soft gradient overlay */}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#26244F]/20 via-transparent to-transparent" />
+              </div>
 
-          <div className="mt-6 md:mt-12 font-serif text-xl italic text-[#26244F]">
-            “Understand first. Act second. Always.”
+              {/* Floating decorative circle */}
+              <motion.div
+                animate={{
+                  y: [0, -12, 0],
+                }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="absolute -bottom-6 -left-5 hidden h-28 w-28 rounded-full border border-[#7D45C2]/20 bg-[#EDE5F8]/80 backdrop-blur-sm sm:block"
+              />
+            </motion.div>
+
           </div>
         </div>
-      </div>
+      </section>
 
       {/* =====================================================
           THE QUESTION
       ===================================================== */}
-      <div className="px-3 sm:px-5">
-        <div className="grid overflow-hidden rounded-[24px] bg-[#fff] lg:grid-cols-2">
+      <section className="relative overflow-hidden bg-[#F7F2FC] px-3 py-8 sm:px-5 lg:py-16">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="grid overflow-hidden rounded-[24px] bg-white lg:grid-cols-2 lg:rounded-[32px]">
 
-          {/* Image */}
-          <div className="min-h-[430px] bg-[#E7E4EA] lg:min-h-[620px]">
-            <img
-              src="/ban2.jpeg"
-              alt="The beginning of Solvestic"
-              className="h-full w-full object-cover"
-            />
-          </div>
+            {/* LEFT IMAGE */}
+            <motion.div
+              initial={{
+                opacity: 0,
+                x: -70,
+                scale: 0.95,
+              }}
+              whileInView={{
+                opacity: 1,
+                x: 0,
+                scale: 1,
+              }}
+              viewport={{
+                once: true,
+                amount: 0.2,
+              }}
+              transition={{
+                duration: 0.9,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="relative flex h-[320px] items-center justify-center overflow-hidden bg-[#F4EDF9] sm:h-[450px] lg:h-full lg:min-h-[570px]"
+            >
+              <div className="group relative h-full w-full overflow-hidden">
+                <Image
+                  src="/about1.jpg"
+                  alt="The beginning of Solvestic"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover object-top transition-transform duration-[1200ms] ease-out group-hover:scale-105"
+                />
+              </div>
+            </motion.div>
 
-          {/* Content */}
-          <div className="flex items-center px-4 py-6 md:py-13 sm:px-12 lg:px-20">
-            <div className="max-w-[680px]">
+            {/* RIGHT CONTENT */}
+            <div className="flex items-center px-5 py-10 sm:px-10 sm:py-14 lg:px-14 lg:py-20 xl:px-20">
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{
+                  once: true,
+                  amount: 0.2,
+                }}
+                transition={{
+                  staggerChildren: 0.15,
+                }}
+                className="max-w-[620px]"
+              >
+                {/* Eyebrow */}
+                <motion.p
+                  variants={fadeUp}
+                  className="mb-5 text-[11px] font-medium uppercase tracking-[0.25em] text-[#8E91C4] sm:mb-7"
+                >
+                  THE BEGINNING
+                </motion.p>
 
-              <p className="mb-4 md:mb-7 text-[10px] uppercase tracking-[0.2em] text-[#8E91C4]">
-                THE BEGINNING
-              </p>
+                {/* Heading */}
+                <motion.h2
+                  variants={fadeUp}
+                  className="font-serif text-4xl leading-[1.12] text-[#191919] sm:text-5xl lg:text-[52px]"
+                >
+                  One simple question{" "}
+                  <span className="italic text-[#7D45C2]">
+                    changed everything.
+                  </span>
+                </motion.h2>
 
-              <h2 className="font-serif text-3xl leading-[1.05] text-black sm:text-5xl">
-                One simple question changed everything.
-              </h2>
+                {/* Intro */}
+                <motion.p
+                  variants={fadeUp}
+                  className="mt-6 text-sm leading-[1.9] text-[#484454] sm:mt-8 sm:text-base"
+                >
+                  One day, during a conversation with my
+                  husband, he simply asked me,
+                </motion.p>
 
-              <p className="mt-4 md:mt-8 text-sm leading-[1.9] text-black sm:text-base">
-                One day, during a conversation with my husband, he simply
-                asked me,
-              </p>
+                {/* Highlighted Quote */}
+                <motion.blockquote
+                  variants={fadeUp}
+                  className="relative my-7 border-l-[3px] border-[#7D45C2] pl-5 font-serif text-2xl italic leading-[1.35] text-[#7D45C2] sm:my-9 sm:pl-7 sm:text-3xl"
+                >
+                  “Instead of looking here and there, why
+                  don’t you formulate one yourself?”
+                </motion.blockquote>
 
-              <blockquote className="my-6 md:my-8 border-l border-[#AD51C1] pl-5 font-serif text-2xl leading-tight text-[#AD51C1] sm:text-3xl">
-                “Instead of looking here and there, why don’t you formulate
-                one yourself?”
-              </blockquote>
+                {/* Description */}
+                <motion.p
+                  variants={fadeUp}
+                  className="text-sm leading-[1.9] text-[#484454] sm:text-base"
+                >
+                  It was a simple question, but it stayed
+                  with us. Somewhere between long
+                  conversations and even longer nights,
+                  that question slowly became an idea —
+                  and eventually, a promise we made to
+                  each other, and to everyone who would
+                  one day trust us with their skin.
+                </motion.p>
 
-              <p className="text-sm leading-[1.9] text-black sm:text-base">
-                It was a simple question, but it stayed with us. Somewhere
-                between long conversations and even longer nights, that
-                question slowly became an idea — and eventually, a promise we
-                made to each other, and to everyone who would one day trust us
-                with their skin.
-              </p>
-
+                {/* Decorative line */}
+                <motion.div
+                  variants={fadeUp}
+                  className="mt-9 h-[2px] w-16 bg-[#7D45C2]/50"
+                />
+              </motion.div>
             </div>
+
           </div>
         </div>
-      </div>
+      </section>
 
       {/* =====================================================
           SOLVESTIC PHILOSOPHY
       ===================================================== */}
-      <div className="px-4 py-6 sm:px-10 sm:py-13">
-
+      <div className="px-4 py-6 md:px-20 sm:py-13 bg-[#F7F2FC]">
         <div className="grid gap-6 md:gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
 
           <div>
@@ -151,7 +288,7 @@ export default function About() {
               OUR PHILOSOPHY
             </p>
 
-            <h2 className="mt-3 md:mt-5 max-w-[420px] text-black font-serif text-4xl leading-[0.98] sm:text-6xl">
+            <h2 className="mt-3 md:mt-5 max-w-[500px] text-black font-serif text-4xl leading-[0.98] sm:text-6xl">
               Understand first.
               <br />
               <i>Act second.</i>
@@ -191,141 +328,226 @@ export default function About() {
       {/* =====================================================
           FOUNDER STORY
       ===================================================== */}
-      <div className="px-3 sm:px-5">
-        <div className="overflow-hidden rounded-[24px] bg-[#fff]">
+      <section className="relative overflow-hidden bg-[#F7F2FC] px-3 py-8 sm:px-5 lg:py-16">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="overflow-hidden rounded-[24px] bg-white lg:rounded-[32px]">
+            <div className="grid md:grid-cols-2">
 
-          <div className="grid md:grid-cols-2  ">
+              {/* LEFT CONTENT */}
+              <div className="order-1 flex items-center px-5 py-10 sm:px-10 sm:py-14 lg:px-14 lg:py-20 xl:px-20">
+                <motion.div
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{
+                    once: true,
+                    amount: 0.2,
+                  }}
+                  transition={{
+                    staggerChildren: 0.15,
+                  }}
+                  className="max-w-[550px]"
+                >
+                  {/* Small heading */}
+                  <motion.p
+                    variants={fadeUp}
+                    className="text-[11px] font-medium uppercase tracking-[0.25em] text-[#8E91C4]"
+                  >
+                    THE PEOPLE BEHIND SOLVESTIC
+                  </motion.p>
 
-            {/* Founder image */}
-            <div className="min-h-[420px] order-2 bg-[#E5E2E7] md:min-h-[600px]">
-              <img
-                src="/about4.jpeg"
-                alt="Sneha Suman and Prince Verma"
-                className="h-full w-full object-cover"
-              />
-            </div>
+                  {/* Main heading */}
+                  <motion.h2
+                    variants={fadeUp}
+                    className="mt-5 font-serif text-4xl leading-[1.12] text-[#191919] sm:mt-7 sm:text-5xl lg:text-[52px]"
+                  >
+                    Two creative minds.
+                    <br />
+                    <span className="italic text-[#7D45C2]">
+                      One shared belief.
+                    </span>
+                  </motion.h2>
 
-            {/* Founder copy */}
-            <div className="flex order-1  items-center px-4 py-6 md:py-13 sm:px-12 lg:px-20">
-              <div className="max-w-[550px]">
-
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#8E91C4]">
-                  THE PEOPLE BEHIND SOLVESTIC
-                </p>
-
-                <h2 className="mt-3 md:mt-6 font-serif text-black text-3xl leading-[1.05] sm:text-5xl">
-                  Two creative minds.
-                  <br />
-                  One shared belief.
-                </h2>
-
-                <p className="mt-4 md:mt-8 text-sm md:leading-[1.9] text-black sm:text-base">
-                  We wanted to create skincare differently — with transparency
-                  at the centre of every decision.
-                </p>
-
-                <p className="mt-3 md:mt-6 text-sm md:leading-[1.9] text-black sm:text-base">
-                  We wanted to understand skin concerns properly before trying
-                  to create solutions for them.
-                </p>
-
-                <p className="mt-3 md:mt-6 text-sm md:leading-[1.9] text-black sm:text-base">
-                  No unnecessary promises, no trying to make skincare
-                  complicated, and no building something simply because it
-                  sounds good.
-                </p>
-
-                {/* <div className="mt-10 grid grid-cols-2 gap-8 border-t border-[#DCDDEF] pt-7">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.15em] text-black">
-                      SNEHA SUMAN
-                    </p>
-                    <p className="mt-2 text-sm text-black">
-                      Fashion Designer
-                    </p>
+                  {/* Paragraphs */}
+                  <div className="mt-7 space-y-5 sm:mt-9 sm:space-y-6">
+                    {paragraphs.map((paragraph, index) => (
+                      <motion.p
+                        key={index}
+                        variants={fadeUp}
+                        className="text-sm leading-[1.9] text-[#484454] sm:text-base"
+                      >
+                        {paragraph}
+                      </motion.p>
+                    ))}
                   </div>
 
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.15em] text-black">
-                      PRINCE VERMA
-                    </p>
-                    <p className="mt-2 text-sm text-black">
-                      Model
-                    </p>
-                  </div>
-                </div> */}
+                  {/* Founder Names */}
+                  <motion.div
+                    variants={fadeUp}
+                    className="mt-10 grid grid-cols-2 gap-5 border-t border-[#E5DDED] pt-7 sm:gap-8"
+                  >
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#26244F]">
+                        Sneha Suman
+                      </p>
+                      <p className="mt-2 text-sm text-[#777184]">
+                        Co-Founder
+                      </p>
+                    </div>
 
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#26244F]">
+                        Prince Verma
+                      </p>
+                      <p className="mt-2 text-sm text-[#777184]">
+                        Co-Founder
+                      </p>
+                    </div>
+                  </motion.div>
+                </motion.div>
               </div>
-            </div>
 
+              {/* RIGHT FOUNDER IMAGE */}
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  x: 70,
+                  scale: 0.95,
+                }}
+                whileInView={{
+                  opacity: 1,
+                  x: 0,
+                  scale: 1,
+                }}
+                viewport={{
+                  once: true,
+                  amount: 0.2,
+                }}
+                transition={{
+                  duration: 0.9,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="order-2 relative min-h-[380px] overflow-hidden bg-[#E5E2E7] sm:min-h-[500px] md:min-h-[600px]"
+              >
+                <div className="group absolute inset-0 overflow-hidden">
+                  <Image
+                    src="/founder.jpg"
+                    alt="Sneha Suman and Prince Verma - Founders of Solvestic"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover object-center transition-transform duration-[1200ms] ease-out group-hover:scale-105"
+                  />
+
+                  {/* Subtle gradient overlay */}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#26244F]/15 via-transparent to-transparent" />
+                </div>
+              </motion.div>
+
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* =====================================================
           MISSION
       ===================================================== */}
-      <div className="px-5 py-6 text-center sm:px-10 sm:py-13">
+      <section className="relative overflow-hidden bg-[#F7F2FC] px-3 py-8 sm:px-5 lg:py-16">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="grid overflow-hidden rounded-[24px] bg-white lg:grid-cols-2 lg:rounded-[32px]">
 
-        <p className="text-[10px] uppercase tracking-[0.2em] text-[#8E91C4]">
-          OUR MISSION
-        </p>
+            {/* LEFT IMAGE */}
+            <motion.div
+              initial={{
+                opacity: 0,
+                x: -70,
+                scale: 0.95,
+              }}
+              whileInView={{
+                opacity: 1,
+                x: 0,
+                scale: 1,
+              }}
+              viewport={{
+                once: true,
+                amount: 0.2,
+              }}
+              transition={{
+                duration: 0.9,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="relative min-h-[350px] overflow-hidden bg-[#EDE5F8] sm:min-h-[450px] lg:min-h-[600px]"
+            >
+              <div className="group absolute inset-0 overflow-hidden">
+                <Image
+                  src="/about2.jpg"
+                  alt="Solvestic skincare mission"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover object-top transition-transform duration-[1200ms] ease-out group-hover:scale-105"
+                />
 
-        <h2 className="mx-auto mt-3 md:mt-6 max-w-[850px] font-serif text-[#7b44bf] text-3xl md:leading-[1.05] sm:text-5xl lg:text-7xl">
-          Skincare that feels less like a brand selling to you,
-          <br className="hidden lg:block" />
-          <i>and more like someone understands.</i>
-        </h2>
-
-        <div className="mx-auto mt-5 md:mt-10 max-w-[680px] text-sm md:leading-[1.9] text-black sm:text-base">
-          <p>
-            Our mission is simple, and it’s one we return to every day:
-            keep listening, keep understanding, and keep building things that
-            are honest — one relationship, one skin, one concern at a time.
-          </p>
-        </div>
-
-      </div>
-
-      {/* =====================================================
-          CLOSING IMAGE / STATEMENT
-      ===================================================== */}
-      <div className="px-3 pb-3 sm:px-5 sm:pb-5">
-
-        <div className="relative min-h-[340px] overflow-hidden rounded-[24px] bg-[#7b44bf] sm:min-h-[580px]">
-
-          {/* <img
-            src="/images/our-story-closing.jpg"
-            alt="Solvestic"
-            className="absolute inset-0 h-full w-full object-cover opacity-80"
-          /> */}
-
-          <div className="absolute inset-0 bg-[#26244F]/35" />
-
-          <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-white">
-
-            <div className="max-w-[850px]">
-
-              <p className="mb-8 text-[10px] uppercase tracking-[0.25em]">
-                THIS IS SOLVESTIC
-              </p>
-
-              <h2 className="font-serif text-5xl leading-[0.95] sm:text-7xl lg:text-9xl">
-                Built from a
-                <br />
-                personal experience.
-              </h2>
-
-              <div className="mx-auto mt-10 space-y-1 font-serif text-xl italic sm:text-2xl">
-                <p>Shaped with love.</p>
-                <p>Made with the intention to be real.</p>
+                {/* Soft gradient overlay */}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#26244F]/15 via-transparent to-transparent" />
               </div>
+            </motion.div>
 
+            {/* RIGHT CONTENT */}
+            <div className="flex items-center px-5 py-10 sm:px-10 sm:py-14 lg:px-14 lg:py-20 xl:px-20">
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{
+                  once: true,
+                  amount: 0.2,
+                }}
+                transition={{
+                  staggerChildren: 0.15,
+                }}
+                className="max-w-[650px]"
+              >
+                {/* Eyebrow */}
+                <motion.p
+                  variants={fadeUp}
+                  className="text-[11px] font-medium uppercase tracking-[0.25em] text-[#8E91C4]"
+                >
+                  OUR MISSION
+                </motion.p>
+
+                {/* Heading */}
+                <motion.h2
+                  variants={fadeUp}
+                  className="mt-5 font-serif text-4xl leading-[1.12] text-[#191919] sm:mt-7 sm:text-5xl lg:text-[52px]"
+                >
+                  Skincare that feels less like a brand
+                  selling to you,{" "}
+                  <span className="italic text-[#7D45C2]">
+                    and more like someone understands.
+                  </span>
+                </motion.h2>
+
+                {/* Description */}
+                <motion.p
+                  variants={fadeUp}
+                  className="mt-7 text-sm leading-[1.9] text-[#484454] sm:mt-9 sm:text-base"
+                >
+                  Our mission is simple, and it’s one we
+                  return to every day: keep listening,
+                  keep understanding, and keep building
+                  things that are honest — one
+                  relationship, one skin, one concern at
+                  a time.
+                </motion.p>
+
+                {/* Decorative line */}
+                <motion.div
+                  variants={fadeUp}
+                  className="mt-9 h-[2px] w-16 bg-[#7D45C2]/50"
+                />
+              </motion.div>
             </div>
 
           </div>
         </div>
-      </div>
+      </section>
 
     </section>
   );
