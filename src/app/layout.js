@@ -26,8 +26,8 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Solvestic",
-  description: "Solvestic",
+  title: "Solvestic | Brightening Skincare & Hydration Essentials",
+  description: "Discover Solvestic skincare essentials for brighter, smoother, hydrated-looking skin. Explore pigment-correcting face cleanser, bouncy moisturiser and daily skincare combos.",
 };
 
 

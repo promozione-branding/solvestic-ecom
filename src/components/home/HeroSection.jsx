@@ -19,9 +19,16 @@ import "swiper/css/pagination";
 
 const banners = [
     {
-        id: 2,
+        id: 1,
         image: "/banner/1.png",
         imageMobile: "/banner/2.png",
+        alt: "Solvestic premium body care collection",
+        href: "/our-products",
+    },
+    {
+        id: 2,
+        image: "/banner/3.png",
+        imageMobile: "/banner/4.png",
         alt: "Solvestic premium body care collection",
         href: "/our-products",
     },
@@ -103,19 +110,20 @@ export default function HeroSection() {
                             />
                             <div className="absolute inset-0 z-[2] flex md:justify-start justify-center md:items-center items-end md:mb:0 mb-10">
                                 <div className="mx-auto w-full max-w-7xl px-6 xl:px-10">
-                                    <div className="max-w-xl flex md:justify-start justify-center md:items-center items-end">
-                                        <Link
-                                            href="/our-products"
-                                            className="group/btn md:mt-50 inline-flex items-center gap-3 rounded-full bg-pink-400 px-7 py-4 text-sm font-medium text-white shadow-lg shadow-[#7D45C2]/20 transition-all duration-300 hover:-translate-y-1 hover:bg-pink-500 hover:shadow-xl hover:shadow-[#7D45C2]/30 sm:px-9"
-                                        >
-                                            Explore Collection
+                                    {banner.id != 2 &&
+                                        <div className="max-w-xl flex md:justify-start justify-center md:items-center items-end">
+                                            <Link
+                                                href="/our-products"
+                                                className="group/btn md:mt-60 inline-flex items-center gap-3 rounded-full bg-pink-400 px-7 py-4 text-sm font-medium text-white shadow-lg shadow-[#7D45C2]/20 transition-all duration-300 hover:-translate-y-1 hover:bg-pink-500 hover:shadow-xl hover:shadow-[#7D45C2]/30 sm:px-9"
+                                            >
+                                                Explore Collection
 
-                                            <ArrowRight
-                                                size={18}
-                                                className="transition-transform duration-300 group-hover/btn:translate-x-1"
-                                            />
-                                        </Link>
-                                    </div>
+                                                <ArrowRight
+                                                    size={18}
+                                                    className="transition-transform duration-300 group-hover/btn:translate-x-1"
+                                                />
+                                            </Link>
+                                        </div>}
                                 </div>
                             </div>
                         </div>
