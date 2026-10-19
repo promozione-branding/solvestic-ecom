@@ -538,7 +538,7 @@ export default function Products() {
                                                     fill
                                                     unoptimized
                                                     sizes="(max-width: 640px) 48vw, (max-width: 1024px) 30vw, 23vw"
-                                                    className="object-contain p-2 transition-transform duration-700 group-hover:scale-105 sm:p-4"
+                                                    className="object- transition-transform duration-700 group-hover:scale-105"
                                                 />
                                             </Link>
 

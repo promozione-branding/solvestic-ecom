@@ -21,6 +21,7 @@ const banners = [
     {
         id: 2,
         image: "/banner/1.png",
+        imageMobile: "/banner/2.png",
         alt: "Solvestic premium body care collection",
         href: "/our-products",
     },
@@ -80,25 +81,32 @@ export default function HeroSection() {
             >
                 {banners.map((banner) => (
                     <SwiperSlide key={banner.id}>
-                        <div className="relative h-[480px] w-full overflow-hidden sm:h-[540px] lg:h-[min(650px,calc(90vh-100px))] lg:min-h-[440px] xl:h-[600px]">
+                        <div className="relative h-[480px] w-full overflow-hidden sm:h-[500px] lg:h-[min(650px,calc(60vh-100px))] lg:min-h-[400px] xl:h-[600px]">
+                            {/* Desktop / Tablet Image */}
                             <Image
                                 src={banner.image}
                                 alt={banner.alt}
                                 fill
-                                priority={banner.id === 1}
+                                priority={banner.id === 2}
                                 sizes="100vw"
-                                className="object-cover object-center"
+                                className="hidden object-cover object-center md:block"
                             />
 
-                            {/* LEFT CONTENT OVERLAY */}
-                            {/* <div className="absolute inset-0 bg-gradient-to-r from-[#F7F2FC]/25 via-[#F7F2FC]/10 to-transparent sm:via-[#F7F2FC]/10 lg:via-[#F7F2FC]/15" /> */}
-
-                            <div className="absolute inset-0 z-[2] flex items-center">
+                            {/* Mobile Image */}
+                            <Image
+                                src={banner.imageMobile}
+                                alt={banner.alt}
+                                fill
+                                priority={banner.id === 2}
+                                sizes="100vw"
+                                className="block object-cover object-center md:hidden"
+                            />
+                            <div className="absolute inset-0 z-[2] flex md:justify-start justify-center md:items-center items-end md:mb:0 mb-10">
                                 <div className="mx-auto w-full max-w-7xl px-6 xl:px-10">
-                                    <div className="max-w-xl flex items-center">
+                                    <div className="max-w-xl flex md:justify-start justify-center md:items-center items-end">
                                         <Link
                                             href="/our-products"
-                                            className="group/btn mt-50 inline-flex items-center gap-3 rounded-full bg-pink-400 px-7 py-4 text-sm font-medium text-white shadow-lg shadow-[#7D45C2]/20 transition-all duration-300 hover:-translate-y-1 hover:bg-pink-500 hover:shadow-xl hover:shadow-[#7D45C2]/30 sm:px-9"
+                                            className="group/btn md:mt-50 inline-flex items-center gap-3 rounded-full bg-pink-400 px-7 py-4 text-sm font-medium text-white shadow-lg shadow-[#7D45C2]/20 transition-all duration-300 hover:-translate-y-1 hover:bg-pink-500 hover:shadow-xl hover:shadow-[#7D45C2]/30 sm:px-9"
                                         >
                                             Explore Collection
 
@@ -114,24 +122,6 @@ export default function HeroSection() {
                     </SwiperSlide>
                 ))}
             </Swiper>
-
-            {/* PREVIOUS */}
-            <button
-                type="button"
-                aria-label="Previous banner"
-                className="hero-prev absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/30 text-[#20152B] backdrop-blur-md transition-all duration-300 hover:border-[#7D45C2] hover:bg-[#7D45C2] hover:text-white sm:left-6 sm:h-12 sm:w-12 lg:left-8"
-            >
-                <ArrowLeft size={20} strokeWidth={1.5} />
-            </button>
-
-            {/* NEXT */}
-            <button
-                type="button"
-                aria-label="Next banner"
-                className="hero-next absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/30 text-[#20152B] backdrop-blur-md transition-all duration-300 hover:border-[#7D45C2] hover:bg-[#7D45C2] hover:text-white sm:right-6 sm:h-12 sm:w-12 lg:right-8"
-            >
-                <ArrowRight size={20} strokeWidth={1.5} />
-            </button>
 
             {/* PAGINATION */}
             <div className="hero-pagination absolute bottom-5 left-0 z-10 flex w-full items-center justify-center gap-2 sm:bottom-7" />
