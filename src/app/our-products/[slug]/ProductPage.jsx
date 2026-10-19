@@ -1235,7 +1235,7 @@ export default function ProductPage({ initialProduct, slug }) {
                 </div>
             </section> */}
 
-            <TextureDetailsSection />
+            <TextureDetailsSection slug={product.slug} />
 
             <ReviewsSection slug={slug} productId={product._id.toString()} user={user} />
         </main>
