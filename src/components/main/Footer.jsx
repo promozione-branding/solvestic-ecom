@@ -415,8 +415,8 @@ export default function Footer() {
                                     { name: "Privacy", href: "/privacy-policy" },
                                     { name: "Terms", href: "/terms-and-conditions" },
                                     { name: "FAQ", href: "/faq" },
-
                                     { name: "Shipping", href: "/shipping-policy" },
+                                    { name: "Return & Refund", href: "/return-and-refund-policy" },
                                 ].map((item, idx) => (
                                     <Link
                                         key={idx}
