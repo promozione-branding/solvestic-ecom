@@ -287,7 +287,7 @@ export default function Navbar() {
 
                                     <motion.a
                                         whileHover={{ y: -2, scale: 1.08 }}
-                                        href="https://www.instagram.com/"
+                                        href="https://www.instagram.com/solvesticcare"
                                         target="_blank"
                                         rel="noreferrer"
                                         aria-label="Instagram"
@@ -298,7 +298,7 @@ export default function Navbar() {
 
                                     <motion.a
                                         whileHover={{ y: -2, scale: 1.08 }}
-                                        href="https://www.facebook.com/"
+                                        href="https://www.facebook.com/profile.php?id=61592286175717"
                                         target="_blank"
                                         rel="noreferrer"
                                         aria-label="Facebook"
