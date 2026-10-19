@@ -18,7 +18,7 @@ const details = [
         description:
             "A silky, cushion-like gel texture that glides effortlessly across the skin for a gentle and comfortable cleansing experience.",
         points: ["Creamy gel consistency", "Gentle on the skin", "Smooth, lightweight feel"],
-        marker: { top: "26.5%", left: "42%" },
+        marker: { top: "28%", left: "43.5%" },
         imageLabel: "Texture",
     },
     {
@@ -34,7 +34,7 @@ const details = [
             "Licorice Root Extract",
             "Mulberry Extract",
         ],
-        marker: { top: "27%", left: "63%" },
+        marker: { top: "30%", left: "60%" },
         imageLabel: "Brightening",
     },
     {
@@ -45,7 +45,7 @@ const details = [
         description:
             "A moisture-supporting blend that helps leave skin feeling soft, supple, and comfortable after cleansing.",
         points: ["D-Panthenol", "Betaine", "Trehalose"],
-        marker: { top: "64%", left: "34%" },
+        marker: { top: "69%", left: "34%" },
         imageLabel: "Hydration",
     },
     {
@@ -56,7 +56,7 @@ const details = [
         description:
             "Designed to complement a simple, consistent skincare routine. Choose the formula that suits your individual skin needs.",
         points: ["Daily skincare routine", "Gentle cleansing ritual", "All skin types*"],
-        marker: { top: "61%", left: "60%" },
+        marker: { top: "70%", left: "64%" },
         imageLabel: "Skin compatibility",
     },
 ];
@@ -148,7 +148,7 @@ export default function TextureDetailsSection() {
                                 className="relative mx-auto aspect-[4/4] w-full max-w-[570px] overflow-hidden rounded-[28px] bg-[#F0ECFA] sm:rounded-[36px]"
                             >
                                 <Image
-                                    src="/texture.jpg"
+                                    src="/texture1.jpeg"
                                     alt="Lavender skincare gel texture"
                                     fill
                                     priority
