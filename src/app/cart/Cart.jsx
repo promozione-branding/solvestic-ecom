@@ -30,7 +30,7 @@ import {
 } from "@/lib/cart-storage";
 
 const MAX_QUANTITY = 99;
-const FREE_SHIPPING_THRESHOLD = 1999;
+const ORIGINAL_SHIPPING = 99;
 
 const formatPrice = (price) =>
     new Intl.NumberFormat("en-IN", {
@@ -279,8 +279,8 @@ export default function Cart() {
     const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
     const productDiscount = Math.max(0, originalTotal - subtotal);
     const couponDiscount = appliedCoupon ? Math.round(subtotal * 0.1) : 0;
-    const shipping = subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 99;
-    const total = Math.max(0, subtotal - couponDiscount + shipping);
+    const shipping = 0; // Free shipping on all orders
+    const total = Math.max(0, subtotal - couponDiscount);
 
     const persistGuestItems = (nextItems) => {
         const success = saveGuestCart(
@@ -636,38 +636,39 @@ export default function Cart() {
                                 </div>
                             </div>
 
+
+                            {/* Free Shipping Banner */}
                             <div className="flex items-start gap-4 rounded-3xl border border-[#E9DDF5] bg-white p-5 shadow-sm sm:p-6">
                                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#F1E8FA] text-[#7D45C2]">
                                     <Truck size={23} />
                                 </div>
+
                                 <div className="flex-1">
                                     <h3 className="font-bold text-gray-900">
-                                        Complimentary shipping
+                                        Free Shipping on All Orders
                                     </h3>
+
                                     <p className="mt-1 text-sm leading-6 text-gray-500">
-                                        Final delivery charges and estimated dates will be
-                                        confirmed at checkout.
+                                        Enjoy complimentary standard delivery on every order,
+                                        with no minimum purchase required.
                                     </p>
-                                    <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-gray-100">
-                                        <div
-                                            className="h-full rounded-full bg-[#7D45C2] transition-all"
-                                            style={{
-                                                width: `${Math.min(
-                                                    (subtotal / FREE_SHIPPING_THRESHOLD) * 100,
-                                                    100
-                                                )}%`,
-                                            }}
-                                        />
+
+                                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                                        <span className="text-sm font-medium text-gray-400 line-through">
+                                            {formatPrice(ORIGINAL_SHIPPING)}
+                                        </span>
+
+                                        <span className="text-sm font-bold text-emerald-600">
+                                            FREE Shipping
+                                        </span>
+
+                                        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                                            You Save ₹99
+                                        </span>
                                     </div>
-                                    <p className="mt-2 text-xs font-medium text-gray-500">
-                                        {subtotal >= FREE_SHIPPING_THRESHOLD
-                                            ? "You've unlocked free shipping!"
-                                            : `Add ${formatPrice(
-                                                FREE_SHIPPING_THRESHOLD - subtotal
-                                            )} more for free shipping.`}
-                                    </p>
                                 </div>
                             </div>
+
                         </section>
 
                         <aside className="lg:sticky lg:top-6">
@@ -764,15 +765,23 @@ export default function Cart() {
                                             </div>
                                         )}
 
+
                                         <div className="flex items-center justify-between gap-3">
-                                            <span className="text-gray-500">Shipping</span>
-                                            <span
-                                                className={`font-semibold ${shipping === 0 ? "text-emerald-600" : "text-gray-900"
-                                                    }`}
-                                            >
-                                                {shipping === 0 ? "FREE" : formatPrice(shipping)}
+                                            <span className="text-gray-500">
+                                                Shipping
                                             </span>
+
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm font-medium text-gray-400 line-through">
+                                                    {formatPrice(ORIGINAL_SHIPPING)}
+                                                </span>
+
+                                                <span className="font-bold text-emerald-600">
+                                                    FREE
+                                                </span>
+                                            </div>
                                         </div>
+
                                     </div>
 
                                     <div className="border-t border-gray-100 pt-5">

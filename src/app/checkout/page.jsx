@@ -155,7 +155,8 @@ export default function Page() {
     );
 
     // Shipping will be calculated through your shipping rules later.
-    const shipping = 99;
+    const originalShipping = 99;
+    const shipping = 0; // Free shipping on all orders
     const total = subtotal + shipping;
 
     const getProduct = (item) =>
@@ -582,17 +583,20 @@ export default function Page() {
                         </section>
 
                         {/* Delivery method */}
+
+                        {/* Delivery Method */}
                         <section className="rounded-3xl border border-[#7D45C2]/10 bg-white p-5 shadow-sm sm:p-7">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F7F2FC] text-[#7D45C2]">
                                     <Truck size={21} />
                                 </div>
+
                                 <div>
                                     <h2 className="font-semibold">
                                         Delivery Method
                                     </h2>
                                     <p className="mt-1 text-xs text-[#88818F]">
-                                        Shipping options will be calculated later.
+                                        Enjoy free shipping on all orders!
                                     </p>
                                 </div>
                             </div>
@@ -603,14 +607,21 @@ export default function Page() {
                                         Standard Delivery
                                     </p>
                                     <p className="mt-1 text-xs text-[#77717F]">
-                                        Estimated delivery shown after shipping integration
+                                        Free shipping on every order
                                     </p>
                                 </div>
-                                <span className="text-sm font-semibold text-[#7D45C2]">
-                                    {shipping === 0 ? "—" : formatPrice(shipping)}
-                                </span>
+
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-400 line-through">
+                                        {formatPrice(originalShipping)}
+                                    </span>
+                                    <span className="text-sm font-bold text-green-600">
+                                        FREE
+                                    </span>
+                                </div>
                             </div>
                         </section>
+
                     </div>
 
                     {/* Order Summary */}
@@ -721,12 +732,20 @@ export default function Page() {
                                             </span>
                                         </div>
 
-                                        <div className="flex justify-between gap-3 text-[#77717F]">
+                                        <div className="flex justify-between gap-3 text-sm text-[#77717F]">
                                             <span>Shipping</span>
-                                            <span className="font-medium text-[#24252A]">
-                                                Calculated later
-                                            </span>
+
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-gray-400 line-through">
+                                                    {formatPrice(originalShipping)}
+                                                </span>
+
+                                                <span className="font-semibold text-green-600">
+                                                    FREE
+                                                </span>
+                                            </div>
                                         </div>
+
                                     </div>
 
                                     <div className="my-5 border-t border-[#EAE5EF]" />
@@ -736,8 +755,8 @@ export default function Page() {
                                             <p className="font-semibold">
                                                 Estimated Total
                                             </p>
-                                            <p className="mt-1 text-xs text-[#88818F]">
-                                                Final shipping may change the total
+                                            <p className="mt-1 text-xs font-medium text-green-600">
+                                                You saved {formatPrice(originalShipping)} on shipping!
                                             </p>
                                         </div>
                                         <p className="text-xl font-semibold text-[#7D45C2]">
