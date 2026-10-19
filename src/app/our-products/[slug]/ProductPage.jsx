@@ -20,7 +20,7 @@ import {
 } from "react-icons/fi";
 import { AnimatePresence, motion, } from "framer-motion";
 import { addToGuestCart } from "@/lib/cart-storage";
-import { Check, ChevronLeft, ChevronRight, Heart, Minus, Plus, ShoppingBag, Star } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Heart, Minus, Plus, ShoppingBag, Star, MapPin, LoaderCircle, } from "lucide-react";
 import TextureDetailsSection from "@/components/ourproducts/TextureDetailsSection";
 import ReviewsSection from "@/components/ourproducts/Review";
 import { useSelector } from "react-redux";
@@ -92,6 +92,9 @@ export default function ProductPage({ initialProduct, slug }) {
     const [routineOptions, setRoutineOptions] = useState({});
     const [addingRoutine, setAddingRoutine] = useState(false);
     const [selectedRoutine, setSelectedRoutine] = useState([]);
+    const [pincode, setPincode] = useState("");
+    const [checkingPincode, setCheckingPincode] = useState(false);
+    const [pincodeResult, setPincodeResult] = useState(null);
 
     const [allProducts, setAllProducts] = useState([]);
     useEffect(() => {
@@ -300,6 +303,40 @@ export default function ProductPage({ initialProduct, slug }) {
     const currentImage = galleryImages[galleryIndex] || galleryImages[0];
     const description = product?.shortDescription || product?.description || "Discover the details of this product.";
 
+    const checkPincode = async (event) => {
+        event.preventDefault();
+
+        const code = pincode.trim();
+
+        if (!/^[1-9][0-9]{5}$/.test(code)) {
+            setPincodeResult({
+                success: false,
+                message: "Enter a valid 6-digit PIN code.",
+            });
+            return;
+        }
+
+        setCheckingPincode(true);
+        setPincodeResult(null);
+
+        try {
+            const { data } = await axios.get("/api/user/shipping/check-pincode",
+                { params: { pincode: code }, }
+            );
+
+            setPincodeResult(data);
+        } catch (error) {
+            setPincodeResult({
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    "Unable to check delivery. Please try again.",
+            });
+        } finally {
+            setCheckingPincode(false);
+        }
+    };
+
     const changeImage = (index) => {
         setGalleryIndex((index + galleryImages.length) % galleryImages.length);
     };
@@ -503,6 +540,82 @@ export default function ProductPage({ initialProduct, slug }) {
                     <p className="mt-4 text-[14px] leading-7 text-[#716a78] sm:text-[15px]">
                         {description}
                     </p>
+
+                    <div className="mt-5 rounded-2xl border border-[#e8e1ee] bg-white p-4 sm:p-5">
+                        <div className="flex items-center gap-2">
+                            <MapPin size={19} className="text-[#7D45C2]" />
+                            <h3 className="text-sm font-semibold text-[#302936]">
+                                Check delivery availability
+                            </h3>
+                        </div>
+
+                        <p className="mt-1 text-xs leading-5 text-[#89818f]">
+                            Enter your PIN code to check delivery availability at your location.
+                        </p>
+
+                        <form
+                            onSubmit={checkPincode}
+                            className="mt-4 flex flex-col gap-2 sm:flex-row"
+                        >
+                            <input
+                                type="text"
+                                inputMode="numeric"
+                                autoComplete="postal-code"
+                                maxLength={6}
+                                value={pincode}
+                                onChange={(event) => {
+                                    setPincode(
+                                        event.target.value.replace(/\D/g, "").slice(0, 6)
+                                    );
+                                    setPincodeResult(null);
+                                }}
+                                placeholder="Enter 6-digit PIN code"
+                                aria-label="Delivery PIN code"
+                                className="min-w-0 flex-1 rounded-xl border border-[#e4dce9] bg-[#fffdfb] px-4 py-3 text-sm text-[#302936] outline-none transition placeholder:text-[#aaa1b1] focus:border-[#7D45C2] focus:ring-2 focus:ring-[#7D45C2]/10"
+                            />
+
+                            <button
+                                type="submit"
+                                disabled={checkingPincode || pincode.length !== 6}
+                                className="flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-[#7D45C2] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#6936aa] disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {checkingPincode && (
+                                    <LoaderCircle size={16} className="animate-spin" />
+                                )}
+                                {checkingPincode ? "Checking..." : "Check"}
+                            </button>
+                        </form>
+
+                        {pincodeResult && (
+                            <div
+                                role="status"
+                                className={`mt-3 rounded-xl px-3 py-3 text-sm ${pincodeResult.serviceable
+                                        ? "bg-green-50 text-green-700"
+                                        : "bg-red-50 text-red-600"
+                                    }`}
+                            >
+                                <div className="flex items-start gap-2">
+                                    {pincodeResult.serviceable ? (
+                                        <Check size={17} className="mt-0.5 shrink-0" />
+                                    ) : (
+                                        <FiX size={17} className="mt-0.5 shrink-0" />
+                                    )}
+
+                                    <div>
+                                        <p>{pincodeResult.message}</p>
+
+                                        {pincodeResult.serviceable &&
+                                            pincodeResult.estimatedDelivery && (
+                                                <p className="mt-1 text-xs">
+                                                    Estimated delivery:{" "}
+                                                    {pincodeResult.estimatedDelivery}
+                                                </p>
+                                            )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     {/* Product variants */}
                     {variants.length > 0 && (
