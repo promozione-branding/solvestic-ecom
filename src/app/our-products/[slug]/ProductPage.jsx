@@ -342,7 +342,7 @@ export default function ProductPage({ initialProduct, slug }) {
     };
 
     if (!product) return null;
-    console.log(routineProducts)
+    console.log(product)
     return (
         <main className="min-h-screen bg-[#fffdfb] text-[#28232f]">
             <div className="mx-auto max-w-[1440px] px-5 pb-5 pt-6 sm:px-8 lg:px-12">
@@ -590,8 +590,8 @@ export default function ProductPage({ initialProduct, slug }) {
                             <div
                                 role="status"
                                 className={`mt-3 rounded-xl px-3 py-3 text-sm ${pincodeResult.serviceable
-                                        ? "bg-green-50 text-green-700"
-                                        : "bg-red-50 text-red-600"
+                                    ? "bg-green-50 text-green-700"
+                                    : "bg-red-50 text-red-600"
                                     }`}
                             >
                                 <div className="flex items-start gap-2">
@@ -957,7 +957,7 @@ export default function ProductPage({ initialProduct, slug }) {
                     >
                         <div className="group relative aspect-[4/4] max-h-[720px] overflow-hidden rounded-2xl bg-[#f0eaf6]">
                             <motion.img
-                                src={currentImage}
+                                src={product.images[2].url || currentImage}
                                 alt={`${product?.name || "Product"} specifications`}
                                 whileHover={{ scale: 1.045 }}
                                 transition={{ duration: 0.7, ease: "easeOut" }}
@@ -983,11 +983,11 @@ export default function ProductPage({ initialProduct, slug }) {
                         >
                             <div className="group relative h-[420px] overflow-hidden rounded-2xl bg-[#f3eef8] sm:h-[560px] lg:h-[calc(100vh-120px)] lg:min-h-[520px] lg:max-h-[780px]">
                                 <motion.img
-                                    src={currentImage}
+                                    src={product.images[1].url || currentImage}
                                     alt={`${product?.name || "Product"} details`}
                                     whileHover={{ scale: 1.035 }}
                                     transition={{ duration: 0.7, ease: "easeOut" }}
-                                    className="h-full w-full object-contain"
+                                    className="h-full w-full object-"
                                 />
 
                                 {/* <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" /> */}

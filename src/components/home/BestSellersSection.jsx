@@ -87,18 +87,11 @@ export default function BestSellersSection({ onAddToCart }) {
                 setLoading(true);
                 setError("");
 
-                const params = { limit: 1000 };
+                const params = { limit: 3 };
 
-                const [categoryResponse, productResponse] =
-                    await Promise.all([
-                        axios.get("/api/admin/categories"),
-                        axios.get("/api/admin/products", { params }),
-                    ]);
-
-                const categoryData = getList(
-                    categoryResponse.data,
-                    "categories"
-                );
+                const [productResponse] = await Promise.all([
+                    axios.get("/api/admin/products", { params }),
+                ]);
 
                 const productData = getList(
                     productResponse.data,
@@ -107,7 +100,7 @@ export default function BestSellersSection({ onAddToCart }) {
 
                 if (cancelled) return;
 
-                setCategories(categoryData);
+                setCategories([]);
 
                 setProducts(
                     productData.map((product) => {
@@ -264,7 +257,7 @@ export default function BestSellersSection({ onAddToCart }) {
 
     return (
         <section className="overflow-hidden bg-[#fbfaf8] py-10 text-[#252329] sm:py-12 lg:py-15">
-            <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
+            <div className="mx-auto max-w-[1400px] px-5 sm:px-8 lg:px-12">
                 {/* Categories */}
                 <div className="mb-8 hidden">
                     <div className="flex gap-5 overflow-x-auto overflow-y-hidden py-3 sm:justify-center sm:gap-8 lg:gap-10">
@@ -366,7 +359,7 @@ export default function BestSellersSection({ onAddToCart }) {
                             initial="hidden"
                             animate="visible"
                             exit={{ opacity: 0, y: 10 }}
-                            className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4"
+                            className="grid grid-cols-1 gap-5 sm:grid-cols-1 sm:gap-6 lg:grid-cols-3"
                         >
                             {filteredProducts.map((product) => {
                                 const isWishlisted = wishlistIds.includes(

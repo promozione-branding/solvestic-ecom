@@ -19,12 +19,6 @@ import "swiper/css/pagination";
 
 const banners = [
     {
-        id: 1,
-        image: "/banner/2.png",
-        alt: "Solvestic lavender skincare collection",
-        href: "/our-products",
-    },
-    {
         id: 2,
         image: "/banner/1.png",
         alt: "Solvestic premium body care collection",
@@ -101,26 +95,10 @@ export default function HeroSection() {
 
                             <div className="absolute inset-0 z-[2] flex items-center">
                                 <div className="mx-auto w-full max-w-7xl px-6 xl:px-10">
-                                    <div className="max-w-xl">
-                                        <span className="mb-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#7D45C2] sm:text-sm">
-                                            <span className="h-px w-8 bg-[#7D45C2]" />
-                                            Discover Solvestic
-                                        </span>
-
-                                        <h1 className="text-4xl font-semibold leading-[1] tracking-tight text-[#20152B] sm:text-5xl lg:text-6xl">
-                                            {typedText}
-                                        </h1>
-
-                                        <p className="mt-2 max-w-md text-sm leading-7 text-[#4b2f67] sm:text-base sm:leading-8">
-                                            Elevate your everyday routine with
-                                            thoughtfully crafted beauty and
-                                            body care essentials designed to
-                                            make every moment feel special.
-                                        </p>
-
+                                    <div className="max-w-xl flex items-center">
                                         <Link
                                             href="/our-products"
-                                            className="group/btn mt-8 inline-flex items-center gap-3 rounded-full bg-[#7D45C2] px-7 py-4 text-sm font-medium text-white shadow-lg shadow-[#7D45C2]/20 transition-all duration-300 hover:-translate-y-1 hover:bg-[#6635A5] hover:shadow-xl hover:shadow-[#7D45C2]/30 sm:px-9"
+                                            className="group/btn mt-50 inline-flex items-center gap-3 rounded-full bg-pink-400 px-7 py-4 text-sm font-medium text-white shadow-lg shadow-[#7D45C2]/20 transition-all duration-300 hover:-translate-y-1 hover:bg-pink-500 hover:shadow-xl hover:shadow-[#7D45C2]/30 sm:px-9"
                                         >
                                             Explore Collection
 

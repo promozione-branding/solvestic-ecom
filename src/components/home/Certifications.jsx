@@ -52,7 +52,7 @@ export default function Certifications() {
             />
 
             {/* MAIN CONTAINER */}
-            <div className="relative z-10 mx-auto max-w-7xl px-4">
+            <div className="relative z-10 mx-auto max-w-[1350] px-4">
                 {/* HEADER */}
                 <div className="mb-5">
                     {/* SMALL LABEL */}
@@ -160,8 +160,7 @@ export default function Certifications() {
                                     text-center text-[12px] font-semibold
                                     uppercase
                              text-[#2D1557]
-                                    sm:text-[13px]
-                                    lg:text-[18px]
+                                    sm:text-[15px]
                                 "
                             >
                                 {certificate.title}
