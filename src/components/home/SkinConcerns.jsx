@@ -9,28 +9,28 @@ import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 const concerns = [
     {
         title: "Sun Tan",
-        image: "/skin/11.png",
+        image: "/skin/222.png",
         description:
             "Prolonged sun exposure can leave skin looking darker, dull and uneven. Tan buildup affects your natural radiance, making the complexion appear tired, patchy and less radiant.",
         color: "#E8D4B7",
     },
     {
         title: "Dullness",
-        image: "/skin/14.png",
+        image: "/skin/444.png",
         description:
             "Dull skin can make your complexion look tired, flat, and lacking in its natural radiance. It may leave your skin looking uneven and less refreshed, reducing its healthy, glowing appearance.",
         color: "#D8D1EE",
     },
     {
         title: "Post Acne Marks",
-        image: "/skin/12.png",
+        image: "/skin/333.png",
         description:
             "Acne may fade, but the marks can stay behind. Dark spots and uneven texture left after breakouts can make skin look dull, uneven and less smooth.",
         color: "#E9C9B9",
     },
     {
         title: "Uneven Skin Tone",
-        image: "/skin/13.png",
+        image: "/skin/111.png",
         description:
             "Uneven skin tone creates visible differences in complexion across the face. Dark patches, redness and pigmentation can make skin appear dull, inconsistent and less naturally radiant.",
         color: "#D5E1D0",
