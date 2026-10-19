@@ -981,13 +981,13 @@ export default function ProductPage({ initialProduct, slug }) {
                             transition={{ duration: 0.7, ease: "easeOut" }}
                             className="lg:sticky lg:top-24"
                         >
-                            <div className="group relative h-[420px] overflow-hidden rounded-2xl bg-[#f3eef8] sm:h-[560px] lg:h-[calc(100vh-120px)] lg:min-h-[520px] lg:max-h-[780px]">
+                            <div className="group relative h-[420px] overflow-hidden rounded-2xl bg-[#fff] sm:h-[560px] lg:h-[calc(100vh-120px)] lg:min-h-[520px] lg:max-h-[780px]">
                                 <motion.img
                                     src={product.images[1].url || currentImage}
                                     alt={`${product?.name || "Product"} details`}
                                     whileHover={{ scale: 1.035 }}
                                     transition={{ duration: 0.7, ease: "easeOut" }}
-                                    className="h-full w-full object-"
+                                    className="h-full w-full object-contain"
                                 />
 
                                 {/* <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" /> */}

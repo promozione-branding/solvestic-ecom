@@ -49,9 +49,14 @@ export default function About() {
         <div className="relative min-h-[320px] overflow-hidden bg-[#7b44bf] sm:min-h-[510px] ">
           {/* Replace with your Solvestic image */}
           <img
-            src="/about-banner.png"
+            src="/Personal Experience Beauty Campaign (1).png"
             alt="Solvestic story"
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover md:block hidden"
+          />
+          <img
+            src="/Build From Personal Experience (1).png"
+            alt="Solvestic story"
+            className="absolute inset-0 h-full w-full object-cover md:hidden block"
           />
         </div>
       </div>
