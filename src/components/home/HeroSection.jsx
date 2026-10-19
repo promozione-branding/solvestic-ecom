@@ -27,8 +27,8 @@ const banners = [
     },
     {
         id: 2,
-        image: "/banner/3.png",
-        imageMobile: "/banner/4.png",
+        image: "/banner/4.png",
+        imageMobile: "/banner/3.png",
         alt: "Solvestic premium body care collection",
         href: "/our-products",
     },
