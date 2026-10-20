@@ -14,7 +14,7 @@ import User from "@/models/user.model";
 
 export const runtime = "nodejs";
 
-const SHIPPING_FEE = 99;
+const SHIPPING_FEE = 0;
 
 export async function POST(request) {
     let order;
@@ -203,8 +203,6 @@ export async function POST(request) {
 
         subtotal = Number(subtotal.toFixed(2));
 
-        // Temporary flat shipping fee. Replace this when Shiprocket
-        // shipping rates are integrated.
         const shippingFee = SHIPPING_FEE;
         const totalAmount = Number(
             (subtotal + shippingFee).toFixed(2)

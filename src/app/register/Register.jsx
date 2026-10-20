@@ -147,9 +147,9 @@ export default function Register() {
 
           <section className="flex items-center justify-center px-6 py-10 sm:px-12 lg:px-14">
             <div className="w-full max-w-md">
-              <Link href="/" className="mb-8 inline-block lg:hidden">
+              <Link href="/" className="mb-8 flex justify-center items-center lg:hidden">
                 <Image
-                  src="/logo/logo.png"
+                  src="/logo/solve.png"
                   alt="Solvestic"
                   width={150}
                   height={46}
