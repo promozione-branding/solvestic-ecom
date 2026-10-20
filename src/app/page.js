@@ -19,6 +19,7 @@ import GuessNewLaunch from "@/components/home/GuessOurLaunch";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import InstagramSection from "@/components/home/InstagramSection";
 
 export default function Home() {
   const router = useRouter();
@@ -94,6 +95,7 @@ export default function Home() {
       <ActivatorSection />
       {/* <WhyChooseUs /> */}
       <FounderReels />
+      <InstagramSection />
       {/* <FAQSection /> */}
       {/* <GuessNewLaunch /> */}
       {/* <Jointcommunity /> */}
