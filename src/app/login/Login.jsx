@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,7 +24,7 @@ export default function Login() {
     const router = useRouter();
     const verifier = useRef(null);
     const confirmation = useRef(null);
-
+    const recaptchaInitializing = useRef(null);
     const [method, setMethod] = useState("email");
     const [showPassword, setShowPassword] = useState(false);
     const [otpSent, setOtpSent] = useState(false);
@@ -39,6 +39,60 @@ export default function Login() {
         otp: "",
         remember: true,
     });
+
+    const getRecaptchaVerifier = async () => {
+        if (verifier.current) {
+            return verifier.current;
+        }
+
+        if (recaptchaInitializing.current) {
+            return recaptchaInitializing.current;
+        }
+
+        recaptchaInitializing.current = (async () => {
+            const instance = new RecaptchaVerifier(
+                firebaseAuth,
+                "login-recaptcha",
+                {
+                    size: "invisible",
+                }
+            );
+
+            try {
+                await instance.render();
+                verifier.current = instance;
+                return instance;
+            } catch (error) {
+                instance.clear();
+                throw error;
+            }
+        })();
+
+        try {
+            return await recaptchaInitializing.current;
+        } finally {
+            recaptchaInitializing.current = null;
+        }
+    };
+
+    const handleMobileChange = (e) => {
+        let digits = e.target.value.replace(/\D/g, "");
+
+        // Handle pasted numbers with +91 or 91
+        if (digits.length > 10 && digits.startsWith("91")) {
+            digits = digits.slice(2);
+        }
+
+        // Handle pasted numbers with leading 0
+        if (digits.length === 11 && digits.startsWith("0")) {
+            digits = digits.slice(1);
+        }
+
+        setForm((prev) => ({
+            ...prev,
+            mobile: digits.slice(0, 10),
+        }));
+    };
 
     const update = (e) => {
         const { name, value, checked, type } = e.target;
@@ -89,39 +143,48 @@ export default function Login() {
 
     const handleSendOtp = async (e) => {
         e.preventDefault();
+
+        if (loading) return;
+
         setError("");
         setMessage("");
         setLoading(true);
 
         try {
-            const mobile = form.mobile.trim();
+            let digits = form.mobile.replace(/\D/g, "");
 
-            if (!/^\+[1-9]\d{7,14}$/.test(mobile)) {
+            if (digits.length === 12 && digits.startsWith("91")) {
+                digits = digits.slice(2);
+            }
+
+            if (!/^[6-9]\d{9}$/.test(digits)) {
                 throw new Error(
-                    "Enter your mobile number with country code, e.g. +919876543210."
+                    "Please enter a valid 10-digit Indian mobile number."
                 );
             }
 
-            if (!verifier.current) {
-                verifier.current = new RecaptchaVerifier(
-                    firebaseAuth,
-                    "login-recaptcha",
-                    { size: "invisible" }
-                );
-            }
+            const mobile = `+91${digits}`;
+
+            const appVerifier = await getRecaptchaVerifier();
 
             confirmation.current = await signInWithPhoneNumber(
                 firebaseAuth,
                 mobile,
-                verifier.current
+                appVerifier
             );
 
             setOtpSent(true);
-            setMessage("Verification code sent to " + mobile);
+            setMessage(`Verification code sent to ${mobile}`);
+
         } catch (err) {
-            verifier.current?.clear();
-            verifier.current = null;
-            setError(err.message || "Unable to send OTP. Please try again.");
+            console.error("Firebase OTP Error:", err);
+
+            setError(
+                err.message || "Unable to send OTP. Please try again."
+            );
+
+            // Do not clear and recreate the verifier here.
+            // Firebase may reset the reCAPTCHA after a failed request.
         } finally {
             setLoading(false);
         }
@@ -171,6 +234,13 @@ export default function Login() {
         setError("");
         setMessage("");
     };
+
+    useEffect(() => {
+        return () => {
+            verifier.current?.clear();
+            verifier.current = null;
+        };
+    }, []);
 
     return (
         <main className="min-h-screen bg-[#F7F2FC] px-4 py-8 sm:px-6 lg:px-10">
@@ -224,7 +294,7 @@ export default function Login() {
                         <div className="w-full max-w-md">
                             <Link href="/" className="mb-8 flex justify-center items-center lg:hidden">
                                 <Image
-                                     src="/logo/solve.png"
+                                    src="/logo/solve.png"
                                     alt="Solvestic"
                                     width={150}
                                     height={46}
@@ -288,6 +358,8 @@ export default function Login() {
                                     {message}
                                 </div>
                             )}
+
+                            <div id="login-recaptcha" />
 
                             {method === "email" ? (
                                 <form onSubmit={handleEmailLogin} className="space-y-5">
@@ -401,28 +473,27 @@ export default function Login() {
                                             >
                                                 Mobile number
                                             </label>
+
                                             <div className="relative">
                                                 <Phone
                                                     size={19}
                                                     className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
                                                 />
+
                                                 <input
                                                     id="mobile"
                                                     name="mobile"
                                                     type="tel"
-                                                    inputMode="tel"
-                                                    autoComplete="tel"
-                                                    placeholder="+919876543210"
+                                                    inputMode="numeric"
+                                                    autoComplete="tel-national"
+                                                    placeholder="9876543210"
                                                     value={form.mobile}
-                                                    onChange={update}
+                                                    onChange={handleMobileChange}
+                                                    maxLength={13}
                                                     required
                                                     className="h-14 w-full rounded-xl border border-[#E8DFEF] bg-[#FCFAFE] pl-12 pr-4 text-sm text-gray-800 outline-none transition focus:border-[#7D45C2] focus:ring-4 focus:ring-[#7D45C2]/10"
                                                 />
                                             </div>
-                                            <p className="mt-2 text-xs leading-5 text-gray-500">
-                                                Include your country code. We will send you a
-                                                verification code by SMS.
-                                            </p>
                                         </div>
                                     ) : (
                                         <>
@@ -472,8 +543,6 @@ export default function Login() {
                                         </>
                                     )}
 
-                                    <div id="login-recaptcha" />
-
                                     <button
                                         type="submit"
                                         disabled={loading}
@@ -508,7 +577,7 @@ export default function Login() {
 
                             <p className="mt-7 text-center text-xs leading-5 text-gray-400">
                                 By continuing, you agree to our{" "}
-                                <Link href="/terms" className="font-medium text-[#7D45C2] hover:underline">
+                                <Link href="/terms-and-conditions" className="font-medium text-[#7D45C2] hover:underline">
                                     Terms of Service
                                 </Link>{" "}
                                 and{" "}

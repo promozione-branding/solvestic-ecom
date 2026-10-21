@@ -351,7 +351,7 @@ export default function BestSellersSection({ onAddToCart }) {
                             Try Again
                         </button>
                     </div>
-                ) : filteredProducts.length > 0 ? (
+                ) : products.length > 0 ? (
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={activeCategory}
@@ -361,7 +361,7 @@ export default function BestSellersSection({ onAddToCart }) {
                             exit={{ opacity: 0, y: 10 }}
                             className="grid grid-cols-1 gap-5 sm:grid-cols-1 sm:gap-6 lg:grid-cols-3"
                         >
-                            {filteredProducts.map((product) => {
+                            {products.map((product) => {
                                 const isWishlisted = wishlistIds.includes(
                                     String(product._id || product.id)
                                 );
