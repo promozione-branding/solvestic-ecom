@@ -84,7 +84,7 @@ const productDetails = {
 
     "rapid-pigment-correcting-bouncy-moisturiser": {
         // Replace this path with your moisturiser texture image.
-        image: "/texture2.png",
+        image: "/texture2.jpeg",
         imageAlt: "Solvestic bouncy gel moisturiser texture",
         details: [
             {
