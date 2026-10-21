@@ -38,15 +38,15 @@ const FOUNDER_REELS = [
         reelId: "DeHMP6Rz6LQ",
         comingSoon: false,
     },
-    {
-        id: 4,
-        episode: "EPISODE 03",
-        title: "Founder Diary Ep. 3",
-        description: "Coming Soon",
-        instagram: "",
-        reelId: "",
-        comingSoon: true,
-    },
+    // {
+    //     id: 4,
+    //     episode: "EPISODE 03",
+    //     title: "Founder Diary Ep. 3",
+    //     description: "Coming Soon",
+    //     instagram: "",
+    //     reelId: "",
+    //     comingSoon: true,
+    // },
 ];
 
 export default function FounderReels() {

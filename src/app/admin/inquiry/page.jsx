@@ -290,7 +290,7 @@ export default function InquiryPage() {
                                     />
                                 </div>
 
-                                <div className="relative">
+                                {/* <div className="relative">
                                     <select
                                         value={statusFilter}
                                         onChange={(e) =>
@@ -315,7 +315,7 @@ export default function InquiryPage() {
                                         size={16}
                                         className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
                                     />
-                                </div>
+                                </div> */}
 
                                 <div className="relative">
                                     <select
@@ -636,7 +636,7 @@ export default function InquiryPage() {
                                 </p>
                             </div>
 
-                            <div>
+                            {/* <div>
                                 <label className="mb-2 block text-sm font-semibold">
                                     Inquiry status
                                 </label>
@@ -662,7 +662,7 @@ export default function InquiryPage() {
                                 <p className="mt-2 text-xs text-gray-400">
                                     Status changes are local to this page and are not saved to BrandBnalo.
                                 </p>
-                            </div>
+                            </div> */}
 
                             <div className="flex flex-col-reverse gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:justify-between">
                                 <button
