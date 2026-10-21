@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "@/components/admin/Sidebar";
 import {
     Search,
@@ -8,7 +8,6 @@ import {
     MessageSquare,
     Clock,
     CheckCircle2,
-    XCircle,
     Eye,
     X,
     Mail,
@@ -17,63 +16,38 @@ import {
     ChevronDown,
 } from "lucide-react";
 
-const initialInquiries = [
-    {
-        id: 1,
-        name: "Rahul Sharma",
-        email: "rahul.sharma@example.com",
-        phone: "+91 98765 43210",
-        subject: "Product enquiry",
-        message:
-            "I would like to know more about your hair care products and available offers.",
-        status: "new",
-        date: "2026-10-17T10:30:00",
-    },
-    {
-        id: 2,
-        name: "Priya Verma",
-        email: "priya.verma@example.com",
-        phone: "+91 98765 12345",
-        subject: "Order related",
-        message:
-            "I need an update regarding my recent order and its expected delivery date.",
-        status: "in_progress",
-        date: "2026-10-16T14:15:00",
-    },
-    {
-        id: 3,
-        name: "Amit Gupta",
-        email: "amit.gupta@example.com",
-        phone: "+91 98111 22334",
-        subject: "Bulk purchase",
-        message:
-            "Please share the pricing and available discounts for bulk purchases.",
-        status: "resolved",
-        date: "2026-10-15T11:45:00",
-    },
-    {
-        id: 4,
-        name: "Sneha Kapoor",
-        email: "sneha.kapoor@example.com",
-        phone: "+91 98990 11223",
-        subject: "Return and refund",
-        message:
-            "I want to understand the return policy for a product I recently purchased.",
-        status: "new",
-        date: "2026-10-14T16:20:00",
-    },
-    {
-        id: 5,
-        name: "Vikash Singh",
-        email: "vikash.singh@example.com",
-        phone: "+91 99100 33445",
-        subject: "Other",
-        message:
-            "I have a question about the ingredients used in your products.",
-        status: "closed",
-        date: "2026-10-13T09:10:00",
-    },
-];
+const SUPPLIER_TOKEN = process.env.NEXT_PUBLIC_BRANDBNALO_SUPPLIER_TOKEN || "6a9e3df1f9dc8e66e7dd8a92";
+
+function extractForms(payload) {
+    if (Array.isArray(payload)) return payload;
+    const candidates = [
+        payload?.forms,
+        payload?.data,
+        payload?.data?.forms,
+        payload?.data?.data,
+        payload?.data?.data?.forms,
+        payload?.results,
+        payload?.data?.results,
+    ];
+    return candidates.find(Array.isArray) ?? [];
+}
+
+function normalizeInquiry(item, index) {
+    const rawStatus = String(item.status || "new").toLowerCase().replaceAll(" ", "_");
+    const allowedStatuses = ["new", "in_progress", "resolved", "closed"];
+    return {
+        id: String(item._id ?? item.id ?? `row-${index}`),
+        name: String(item.name ?? item.contactPerson ?? "Unknown"),
+        email: String(item.email ?? ""),
+        phone: String(item.phone ?? ""),
+        subject: String(item.product ?? item.subject ?? item.skinConcern ?? "General enquiry"),
+        message: String(item.message ?? ""),
+        place: String(item.place ?? ""),
+        platform: String(item.platform ?? ""),
+        status: allowedStatuses.includes(rawStatus) ? rawStatus : "new",
+        date: item.createdAt ?? item.submittedAt ?? item.date ?? null,
+    };
+}
 
 const inputClass =
     "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 outline-none transition focus:border-[#7D45C2]";
@@ -88,9 +62,8 @@ function StatusBadge({ status }) {
 
     return (
         <span
-            className={`inline-flex whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${
-                styles[status] || styles.new
-            }`}
+            className={`inline-flex whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold ${styles[status] || styles.new
+                }`}
         >
             {status.replaceAll("_", " ")}
         </span>
@@ -98,6 +71,7 @@ function StatusBadge({ status }) {
 }
 
 function formatDate(date) {
+    if (!date || Number.isNaN(new Date(date).getTime())) return "—";
     return new Date(date).toLocaleString("en-IN", {
         day: "2-digit",
         month: "short",
@@ -108,13 +82,46 @@ function formatDate(date) {
 }
 
 export default function InquiryPage() {
-    const [inquiries, setInquiries] = useState(initialInquiries);
+    const [inquiries, setInquiries] = useState([]);
+    const [filter, setFilter] = useState("today");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [refreshKey, setRefreshKey] = useState(0);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [selectedInquiry, setSelectedInquiry] = useState(null);
     const [page, setPage] = useState(1);
 
     const pageSize = 8;
+
+    useEffect(() => {
+        const controller = new AbortController();
+        async function fetchInquiries() {
+            setLoading(true);
+            setError("");
+            try {
+                if (!SUPPLIER_TOKEN) throw new Error("Missing NEXT_PUBLIC_BRANDBNALO_SUPPLIER_TOKEN");
+                const url = `https://brandbnalo.com/api/form/get-forms/${encodeURIComponent(SUPPLIER_TOKEN)}?filter=${encodeURIComponent(filter)}`;
+                const response = await fetch(url, { signal: controller.signal, cache: "no-store" });
+                if (!response.ok) throw new Error(`Failed to load inquiries (${response.status})`);
+                const payload = await response.json();
+                if (payload?.success === false) throw new Error(payload.message || "Unable to load inquiries");
+                if (controller.signal.aborted) return;
+                setInquiries(extractForms(payload).map(normalizeInquiry));
+                setSelectedInquiry(null);
+                setPage(1);
+            } catch (err) {
+                if (controller.signal.aborted) return;
+                setError(err.message || "Could not load inquiries");
+                setInquiries([]);
+            } finally {
+                if (!controller.signal.aborted) setLoading(false);
+            }
+        }
+        fetchInquiries();
+        return () => controller.abort();
+    }, [filter, refreshKey]);
+
 
     const filteredInquiries = useMemo(() => {
         return inquiries.filter((inquiry) => {
@@ -126,7 +133,8 @@ export default function InquiryPage() {
                 inquiry.email.toLowerCase().includes(query) ||
                 inquiry.phone.toLowerCase().includes(query) ||
                 inquiry.subject.toLowerCase().includes(query) ||
-                inquiry.message.toLowerCase().includes(query);
+                inquiry.message.toLowerCase().includes(query) ||
+                inquiry.place.toLowerCase().includes(query);
 
             const matchesStatus =
                 statusFilter === "all" ||
@@ -265,7 +273,7 @@ export default function InquiryPage() {
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(200px,1fr)_220px_auto]">
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(180px,1fr)_180px_180px_auto]">
                                 <div className="relative">
                                     <Search
                                         size={18}
@@ -309,11 +317,29 @@ export default function InquiryPage() {
                                     />
                                 </div>
 
+                                <div className="relative">
+                                    <select
+                                        value={filter}
+                                        onChange={(e) => { setFilter(e.target.value); setPage(1); }}
+                                        className={`${inputClass} appearance-none pr-10`}
+                                        aria-label="Filter inquiries by date"
+                                    >
+                                        <option value="today">Today</option>
+                                        <option value="yesterday">Yesterday</option>
+                                        <option value="7days">Last 7 Days</option>
+                                        <option value="30days">Last 30 Days</option>
+                                        <option value="all">All Time</option>
+                                    </select>
+                                    <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                </div>
+
                                 <button
                                     type="button"
                                     onClick={() => {
                                         setSearch("");
                                         changeFilter("all");
+                                        setFilter("today");
+                                        setRefreshKey((n) => n + 1);
                                     }}
                                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium transition hover:bg-gray-50"
                                 >
@@ -323,7 +349,17 @@ export default function InquiryPage() {
                             </div>
                         </div>
 
-                        {filteredInquiries.length === 0 ? (
+                        {error && (
+                            <div role="alert" className="mx-4 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                                <span>{error}</span>
+                                <button type="button" onClick={() => setRefreshKey((n) => n + 1)} className="font-semibold underline">Retry</button>
+                            </div>
+                        )}
+                        {loading ? (
+                            <div className="flex min-h-64 items-center justify-center gap-3 text-sm text-gray-500">
+                                <RefreshCw size={20} className="animate-spin" /> Loading inquiries...
+                            </div>
+                        ) : filteredInquiries.length === 0 ? (
                             <div className="flex min-h-64 flex-col items-center justify-center px-5 text-center">
                                 <MessageSquare
                                     size={32}
@@ -333,7 +369,7 @@ export default function InquiryPage() {
                                     No inquiries found
                                 </h3>
                                 <p className="mt-1 text-sm text-gray-500">
-                                    Try another search or status filter.
+                                    {error ? "Could not load inquiries." : "Try another search, status or date filter."}
                                 </p>
                             </div>
                         ) : (
@@ -588,12 +624,15 @@ export default function InquiryPage() {
                                 </p>
                             </div>
 
+                            {selectedInquiry.place && (
+                                <p className="text-sm text-gray-600"><strong>Place:</strong> {selectedInquiry.place}</p>
+                            )}
                             <div>
                                 <h3 className="text-sm font-semibold">
                                     Message
                                 </h3>
                                 <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-gray-600">
-                                    {selectedInquiry.message}
+                                    {selectedInquiry.message || "No message provided."}
                                 </p>
                             </div>
 
@@ -621,8 +660,7 @@ export default function InquiryPage() {
                                 </select>
 
                                 <p className="mt-2 text-xs text-gray-400">
-                                    Demo UI: status changes are kept in local
-                                    page state and are not saved to a database.
+                                    Status changes are local to this page and are not saved to BrandBnalo.
                                 </p>
                             </div>
 

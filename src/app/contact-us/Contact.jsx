@@ -11,6 +11,8 @@ import {
     CheckCircle2,
     LoaderCircle,
 } from "lucide-react";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 export default function Contact() {
     const [formData, setFormData] = useState({
@@ -33,26 +35,79 @@ export default function Contact() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setSubmitted(false);
+
+        if (loading) return;
+        const phone = formData.phone.trim().replace(/[\s()-]/g, "");
+
+        if (!/^(?:\+91|91)?[6-9]\d{9}$/.test(phone)) {
+            toast.error("Please enter a valid Indian phone number");
+            return;
+        }
+
+        const data = {
+            supplierToken: "6a9e3df1f9dc8e66e7dd8a92",
+            platform: "Solvestic",
+            platformEmail: "solvesticwellness@gmail.com",
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            company: "N/A",
+            phone,
+            product: "Contact Enquiry",
+            place: formData.place.trim(),
+            message: formData.message.trim(),
+        };
 
         try {
-            // Connect your contact form API here.
-            // Example: await axios.post("/api/contact", formData);
+            setLoading(true);
+            setSubmitted(false);
 
-            console.log("Contact form data:", formData);
-            setSubmitted(true);
+            const res = await axios.post(
+                "https://brandbnalo.com/api/form/add",
+                data,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    timeout: 15000,
+                    validateStatus: (status) =>
+                        status >= 200 && status < 500,
+                }
+            );
 
-            setFormData({
-                name: "",
-                phone: "",
-                email: "",
-                place: "",
-                message: "",
-            });
+            if (res.status >= 200 && res.status < 300) {
+                setSubmitted(true);
+
+                toast.success(
+                    "Your message has been sent successfully!"
+                );
+
+                setFormData({
+                    name: "",
+                    phone: "",
+                    email: "",
+                    place: "",
+                    message: "",
+                });
+
+                setTimeout(() => {
+                    setSubmitted(false);
+                }, 3000);
+            } else {
+                toast.error(
+                    res.data?.message ||
+                    "Something went wrong. Please try again."
+                );
+            }
         } catch (error) {
-            console.error("Contact form error:", error);
-            alert("Something went wrong. Please try again.");
+            console.error(
+                "Contact form error:",
+                error.response?.data || error.message
+            );
+
+            toast.error(
+                error.response?.data?.message ||
+                "Something went wrong. Please try again."
+            );
         } finally {
             setLoading(false);
         }
