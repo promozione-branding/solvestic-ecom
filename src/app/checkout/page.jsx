@@ -720,8 +720,8 @@ export default function CheckoutPage() {
                                             <div
                                                 key={String(address._id)}
                                                 className={`rounded-2xl border p-4 transition ${selected
-                                                        ? "border-[#7D45C2] bg-[#F9F5FD]"
-                                                        : "border-gray-200 bg-white"
+                                                    ? "border-[#7D45C2] bg-[#F9F5FD]"
+                                                    : "border-gray-200 bg-white"
                                                     }`}
                                             >
                                                 <div className="flex items-start gap-3">
@@ -823,8 +823,8 @@ export default function CheckoutPage() {
                             <div className="space-y-3">
                                 <label
                                     className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition ${paymentMethod === "razorpay"
-                                            ? "border-[#7D45C2] bg-[#F9F5FD]"
-                                            : "border-gray-200"
+                                        ? "border-[#7D45C2] bg-[#F9F5FD]"
+                                        : "border-gray-200"
                                         }`}
                                 >
                                     <input
@@ -864,13 +864,14 @@ export default function CheckoutPage() {
 
                                 <label
                                     className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition ${paymentMethod === "cod"
-                                            ? "border-[#7D45C2] bg-[#F9F5FD]"
-                                            : "border-gray-200"
+                                        ? "border-[#7D45C2] bg-[#F9F5FD]"
+                                        : "border-gray-200"
                                         }`}
                                 >
                                     <input
                                         type="radio"
                                         name="paymentMethod"
+                                        disabled
                                         value="cod"
                                         checked={
                                             paymentMethod === "cod"
