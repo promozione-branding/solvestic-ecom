@@ -53,7 +53,7 @@ const products = [
     {
         main: "Add Bounce To Your Glow",
         name: "Rapid Pigment Correcting Bouncy Moisturiser",
-        image: "/products/7.webp",
+        image: "/products/8.png",
         tagline: "Bouncy Moisturiser with 2% Niacinamide, Alpha Arbutin and Hyaluronic Acid",
         subtitle: "Long lasting hydration and a brighter, more even-looking complexion",
         benefits: [
