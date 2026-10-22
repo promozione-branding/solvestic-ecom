@@ -427,28 +427,64 @@ export default function Cart() {
         }
     };
 
+
     const applyCoupon = async (event) => {
         event.preventDefault();
+
         if (!isAuthenticated) {
             setCouponMessage("Log in to receive your first-order discount.");
             return;
         }
+
         if (coupon.trim().toUpperCase() !== "WELCOME10") {
             setCouponMessage("Invalid coupon code.");
             return;
         }
+
+        // Check if Combo Pack is in the cart
+        const hasComboPack = items.some((item) => {
+            const product =
+                typeof item.productId === "object"
+                    ? item.productId
+                    : item.product || item;
+
+            return (
+                String(product?.name || "")
+                    .trim()
+                    .toLowerCase() === "combo pack"
+            );
+        });
+
+        if (hasComboPack) {
+            setAppliedCoupon(false);
+            setCouponMessage(
+                "WELCOME10 cannot be applied when Combo Pack is in your cart."
+            );
+            return;
+        }
+
         setCouponLoading(true);
+
         try {
             const data = await request("/api/user/coupon");
+
             setAppliedCoupon(data.eligible === true);
-            setCouponMessage(data.eligible ? "WELCOME10 applied — 10% off!" : "This coupon is no longer available for your account.");
+
+            setCouponMessage(
+                data.eligible
+                    ? "WELCOME10 applied — 10% off!"
+                    : "This coupon is no longer available for your account."
+            );
         } catch (error) {
             setAppliedCoupon(false);
-            setCouponMessage(error.message || "Unable to validate coupon.");
+            setCouponMessage(
+                error.message || "Unable to validate coupon."
+            );
         } finally {
             setCouponLoading(false);
         }
     };
+
 
     if (loading) {
         return (
