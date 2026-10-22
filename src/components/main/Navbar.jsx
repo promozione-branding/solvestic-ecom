@@ -563,7 +563,7 @@ export default function Navbar() {
                                     </Link>
                                 </div>
 
-                                <div className="mt-5 rounded-xl bg-[#F7F2FC] px-4 py-3">
+                                {/* <div className="mt-5 rounded-xl bg-[#F7F2FC] px-4 py-3">
                                     <p className="text-[10px] font-semibold tracking-[0.15em] text-[#7D45C2]">
                                         A LITTLE SOMETHING SPECIAL
                                     </p>
@@ -572,7 +572,7 @@ export default function Navbar() {
                                         Complimentary shipping on orders over
                                         ₹2,000.
                                     </p>
-                                </div>
+                                </div> */}
                             </div>
                         </motion.nav>
                     </>
