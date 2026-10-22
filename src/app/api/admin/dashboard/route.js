@@ -1,418 +1,593 @@
 
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
+
 import connectDB from "@/lib/mongodb";
-import { verifyAdminToken } from "@/lib/admin-session";
+import Order from "@/models/order.model";
+import User from "@/models/user.model";
+import Product from "@/models/product.model";
+import { requireAdmin } from "@/lib/require-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Change collection names if your MongoDB collections differ.
-const COLLECTIONS = {
-    products: "products",
-    orders: "orders",
-    inquiries: "inquiries",
-    blogs: "blogs",
-    users: "users",
-    payments: "payments",
-    reviews: "productreviews",
-    carts: "carts",
-};
-
-const number = (value) => Number(value || 0);
-
-function getPeriodStart(period) {
-    const now = new Date();
-    const start = new Date(now);
-
-    if (period === "7days") {
-        start.setUTCDate(start.getUTCDate() - 6);
-    } else if (period === "12months") {
-        start.setUTCMonth(start.getUTCMonth() - 11);
-        start.setUTCDate(1);
-    } else {
-        start.setUTCDate(start.getUTCDate() - 29);
-    }
-
-    start.setUTCHours(0, 0, 0, 0);
-    return start;
+function errorResponse(message, status = 500) {
+    return NextResponse.json(
+        {
+            success: false,
+            message,
+        },
+        { status }
+    );
 }
 
-function buildSalesChart(payments, period) {
-    const monthly = period === "12months";
+function placedOrdersFilter() {
+    return {
+        $or: [
+            {
+                paymentMethod: "razorpay",
+                paymentStatus: {
+                    $in: [
+                        "paid",
+                        "refunded",
+                        "partially_refunded",
+                    ],
+                },
+            },
+            {
+                paymentMethod: "cod",
+                orderStatus: {
+                    $in: [
+                        "confirmed",
+                        "processing",
+                        "shipped",
+                        "delivered",
+                        "cancelled",
+                        "returned",
+                    ],
+                },
+            },
+        ],
+    };
+}
+
+function getDateRange(period) {
     const now = new Date();
-    const points = [];
-    const map = new Map();
 
-    const count =
-        period === "7days" ? 7 :
-            monthly ? 12 : 30;
-
-    for (let i = count - 1; i >= 0; i--) {
-        const date = new Date(now);
-
-        if (monthly) {
-            date.setUTCDate(1);
-            date.setUTCMonth(date.getUTCMonth() - i);
-        } else {
-            date.setUTCDate(date.getUTCDate() - i);
-        }
-
-        const key = monthly
-            ? date.toISOString().slice(0, 7)
-            : date.toISOString().slice(0, 10);
-
-        const label = monthly
-            ? date.toLocaleDateString("en-IN", {
-                month: "short",
-                year: "2-digit",
-                timeZone: "UTC",
-            })
-            : date.toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                timeZone: "UTC",
-            });
-
-        const point = {
-            date: key,
-            label,
-            revenue: 0,
-            orders: 0,
-        };
-
-        map.set(key, point);
-        points.push(point);
+    if (period === "all") {
+        return null;
     }
 
-    for (const payment of payments) {
-        const date = new Date(payment.date);
+    const days = {
+        today: 1,
+        "7days": 7,
+        "30days": 30,
+        "90days": 90,
+    };
 
-        const key = monthly
-            ? date.toISOString().slice(0, 7)
-            : date.toISOString().slice(0, 10);
+    const start = new Date(now);
 
-        const point = map.get(key);
-
-        if (point) {
-            point.revenue += number(payment.revenue);
-            point.orders += number(payment.orders);
-        }
+    if (period === "today") {
+        start.setHours(0, 0, 0, 0);
+    } else {
+        start.setDate(
+            start.getDate() -
+            (days[period] || 30) +
+            1
+        );
+        start.setHours(0, 0, 0, 0);
     }
 
-    return points.map((point) => ({
-        ...point,
-        revenue: Math.round(point.revenue * 100) / 100,
-    }));
+    return {
+        $gte: start,
+        $lte: now,
+    };
+}
+
+function getOrderFilter(period) {
+    const dateRange = getDateRange(period);
+
+    const filter = placedOrdersFilter();
+
+    if (dateRange) {
+        filter.createdAt = dateRange;
+    }
+
+    return filter;
+}
+
+function formatRecentOrder(order) {
+    return {
+        _id: String(order._id),
+        orderId: String(order._id),
+        orderNumber: order.orderNumber,
+
+        customerName:
+            order.shippingAddress?.fullName ||
+            "Customer",
+
+        customerEmail:
+            order.customerEmail || "",
+
+        customerMobile:
+            order.shippingAddress?.mobile ||
+            "",
+
+        totalAmount:
+            Number(order.totalAmount) || 0,
+
+        paymentMethod:
+            order.paymentMethod,
+
+        paymentStatus:
+            order.paymentStatus,
+
+        orderStatus:
+            order.orderStatus,
+
+        itemCount: (order.items || []).reduce(
+            (total, item) =>
+                total +
+                Number(item.quantity || 0),
+            0
+        ),
+
+        shipmentStatus:
+            order.shipment?.status ||
+            "not_created",
+
+        awbCode:
+            order.shipment?.awbCode || "",
+
+        createdAt:
+            order.createdAt,
+    };
 }
 
 export async function GET(request) {
     try {
-        // Admin authentication
-        const token = request.cookies.get("admin_token")?.value;
+        // 1. Admin authentication
+        const authError = requireAdmin(request);
 
-        if (!token) {
-            return NextResponse.json(
-                { success: false, message: "Unauthorized" },
-                { status: 401 }
-            );
-        }
-
-        let admin;
-
-        try {
-            admin = await verifyAdminToken(token);
-        } catch {
-            return NextResponse.json(
-                { success: false, message: "Invalid admin session" },
-                { status: 401 }
-            );
-        }
-
-        if (!admin) {
-            return NextResponse.json(
-                { success: false, message: "Unauthorized" },
-                { status: 401 }
-            );
+        if (authError) {
+            return authError;
         }
 
         await connectDB();
 
-        const db = mongoose.connection.db;
-        const { searchParams } = new URL(request.url);
+        // 2. Date range filter
+        const { searchParams } =
+            new URL(request.url);
 
-        const requestedPeriod = searchParams.get("period");
+        const period =
+            searchParams.get("period") ||
+            "30days";
 
-        const period = ["7days", "30days", "12months"].includes(
-            requestedPeriod
-        )
-            ? requestedPeriod
-            : "30days";
+        const allowedPeriods = [
+            "today",
+            "7days",
+            "30days",
+            "90days",
+            "all",
+        ];
 
-        const startDate = getPeriodStart(period);
+        if (!allowedPeriods.includes(period)) {
+            return errorResponse(
+                "Invalid dashboard period.",
+                400
+            );
+        }
 
-        const products = db.collection(COLLECTIONS.products);
-        const orders = db.collection(COLLECTIONS.orders);
-        const inquiries = db.collection(COLLECTIONS.inquiries);
-        const blogs = db.collection(COLLECTIONS.blogs);
-        const users = db.collection(COLLECTIONS.users);
-        const payments = db.collection(COLLECTIONS.payments);
-        const reviews = db.collection(COLLECTIONS.reviews);
-        const carts = db.collection(COLLECTIONS.carts);
+        const orderFilter =
+            getOrderFilter(period);
 
+        const dateRange =
+            getDateRange(period);
+
+        const userFilter = dateRange
+            ? { createdAt: dateRange }
+            : {};
+
+        // 3. Fetch all dashboard data
         const [
-            totalProducts,
-            totalOrders,
-            totalInquiries,
-            publishedBlogs,
-            totalCustomers,
-            pendingReviews,
-            activeCarts,
-            paymentStats,
-            salesData,
-            orderStatuses,
+            orderSummary,
+            statusSummary,
+            paymentSummary,
+            shipmentSummary,
             recentOrders,
-            topProducts,
+            totalCustomers,
+            newCustomers,
+            totalProducts,
         ] = await Promise.all([
-            products.countDocuments(),
-
-            orders.countDocuments(),
-
-            inquiries.countDocuments(),
-
-            blogs.countDocuments(),
-
-            users.countDocuments(),
-
-            reviews.countDocuments({ status: "pending" }),
-
-            carts.countDocuments({
-                "items.0": { $exists: true },
-            }),
-
-            payments.aggregate([
+            // Order and revenue totals
+            Order.aggregate([
                 {
-                    $match: {
-                        status: "captured",
-                        currency: "INR",
-                    },
+                    $match: orderFilter,
                 },
                 {
                     $group: {
                         _id: null,
-                        totalRevenue: { $sum: "$amount" },
-                        successfulPayments: { $sum: 1 },
-                        uniqueOrders: { $addToSet: "$orderId" },
-                    },
-                },
-                {
-                    $project: {
-                        _id: 0,
-                        totalRevenue: 1,
-                        successfulPayments: 1,
-                        paidOrders: { $size: "$uniqueOrders" },
-                    },
-                },
-            ]).toArray(),
 
-            payments.aggregate([
-                {
-                    $match: {
-                        status: "captured",
-                        currency: "INR",
-                        $or: [
-                            { paidAt: { $gte: startDate } },
-                            {
-                                paidAt: null,
-                                createdAt: { $gte: startDate },
+                        totalOrders: {
+                            $sum: 1,
+                        },
+
+                        totalOrderValue: {
+                            $sum: "$totalAmount",
+                        },
+
+                        codOrders: {
+                            $sum: {
+                                $cond: [
+                                    {
+                                        $eq: [
+                                            "$paymentMethod",
+                                            "cod",
+                                        ],
+                                    },
+                                    1,
+                                    0,
+                                ],
                             },
-                        ],
+                        },
+
+                        prepaidOrders: {
+                            $sum: {
+                                $cond: [
+                                    {
+                                        $eq: [
+                                            "$paymentMethod",
+                                            "razorpay",
+                                        ],
+                                    },
+                                    1,
+                                    0,
+                                ],
+                            },
+                        },
+
+                        pendingCODAmount: {
+                            $sum: {
+                                $cond: [
+                                    {
+                                        $and: [
+                                            {
+                                                $eq: [
+                                                    "$paymentMethod",
+                                                    "cod",
+                                                ],
+                                            },
+                                            {
+                                                $eq: [
+                                                    "$paymentStatus",
+                                                    "pending",
+                                                ],
+                                            },
+                                            {
+                                                $not: [
+                                                    {
+                                                        $in: [
+                                                            "$orderStatus",
+                                                            [
+                                                                "cancelled",
+                                                                "returned",
+                                                            ],
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                    "$totalAmount",
+                                    0,
+                                ],
+                            },
+                        },
+
+                        collectedRevenue: {
+                            $sum: {
+                                $cond: [
+                                    {
+                                        $eq: [
+                                            "$paymentStatus",
+                                            "paid",
+                                        ],
+                                    },
+                                    "$totalAmount",
+                                    0,
+                                ],
+                            },
+                        },
+
+                        prepaidRevenue: {
+                            $sum: {
+                                $cond: [
+                                    {
+                                        $and: [
+                                            {
+                                                $eq: [
+                                                    "$paymentMethod",
+                                                    "razorpay",
+                                                ],
+                                            },
+                                            {
+                                                $eq: [
+                                                    "$paymentStatus",
+                                                    "paid",
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                    "$totalAmount",
+                                    0,
+                                ],
+                            },
+                        },
+
+                        codCollectedAmount: {
+                            $sum: {
+                                $cond: [
+                                    {
+                                        $and: [
+                                            {
+                                                $eq: [
+                                                    "$paymentMethod",
+                                                    "cod",
+                                                ],
+                                            },
+                                            {
+                                                $eq: [
+                                                    "$paymentStatus",
+                                                    "paid",
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                    "$totalAmount",
+                                    0,
+                                ],
+                            },
+                        },
+
+                        averageOrderValue: {
+                            $avg: "$totalAmount",
+                        },
                     },
                 },
+            ]),
+
+            // Order status breakdown
+            Order.aggregate([
                 {
-                    $project: {
-                        amount: 1,
-                        orderId: 1,
-                        date: { $ifNull: ["$paidAt", "$createdAt"] },
+                    $match: orderFilter,
+                },
+                {
+                    $group: {
+                        _id: "$orderStatus",
+                        count: {
+                            $sum: 1,
+                        },
                     },
+                },
+            ]),
+
+            // Payment status breakdown
+            Order.aggregate([
+                {
+                    $match: orderFilter,
+                },
+                {
+                    $group: {
+                        _id: "$paymentStatus",
+                        count: {
+                            $sum: 1,
+                        },
+                    },
+                },
+            ]),
+
+            // Shiprocket shipment breakdown
+            Order.aggregate([
+                {
+                    $match: orderFilter,
                 },
                 {
                     $group: {
                         _id: {
-                            $dateToString: {
-                                format:
-                                    period === "12months"
-                                        ? "%Y-%m"
-                                        : "%Y-%m-%d",
-                                date: "$date",
-                                timezone: "UTC",
-                            },
-                        },
-                        revenue: { $sum: "$amount" },
-                        uniqueOrders: { $addToSet: "$orderId" },
-                    },
-                },
-                {
-                    $project: {
-                        _id: 0,
-                        date: "$_id",
-                        revenue: 1,
-                        orders: { $size: "$uniqueOrders" },
-                    },
-                },
-                { $sort: { date: 1 } },
-            ]).toArray(),
-
-            orders.aggregate([
-                {
-                    $group: {
-                        _id: { $ifNull: ["$status", "unknown"] },
-                        count: { $sum: 1 },
-                    },
-                },
-                { $sort: { count: -1 } },
-            ]).toArray(),
-
-            orders.aggregate([
-                { $sort: { createdAt: -1 } },
-                { $limit: 6 },
-                {
-                    $lookup: {
-                        from: COLLECTIONS.users,
-                        localField: "userId",
-                        foreignField: "_id",
-                        as: "customer",
-                    },
-                },
-                {
-                    $project: {
-                        _id: 1,
-                        orderNumber: 1,
-                        status: 1,
-                        paymentStatus: 1,
-                        totalAmount: 1,
-                        total: 1,
-                        grandTotal: 1,
-                        createdAt: 1,
-                        customerName: {
                             $ifNull: [
-                                { $arrayElemAt: ["$customer.name", 0] },
-                                "Guest Customer",
+                                "$shipment.status",
+                                "not_created",
                             ],
                         },
+                        count: {
+                            $sum: 1,
+                        },
                     },
                 },
-            ]).toArray(),
+            ]),
 
-            orders.aggregate([
-                {
-                    $match: {
-                        status: {
-                            $nin: ["cancelled", "canceled"],
-                        },
-                    },
-                },
-                { $unwind: "$items" },
-                {
-                    $group: {
-                        _id: "$items.productId",
-                        sold: {
-                            $sum: {
-                                $ifNull: ["$items.quantity", 1],
-                            },
-                        },
-                    },
-                },
-                { $sort: { sold: -1 } },
-                { $limit: 5 },
-                {
-                    $lookup: {
-                        from: COLLECTIONS.products,
-                        localField: "_id",
-                        foreignField: "_id",
-                        as: "product",
-                    },
-                },
-                {
-                    $project: {
-                        _id: 1,
-                        sold: 1,
-                        name: {
-                            $ifNull: [
-                                { $arrayElemAt: ["$product.name", 0] },
-                                "Unknown Product",
-                            ],
-                        },
-                    },
-                },
-            ]).toArray(),
+            // Recent orders
+            Order.find(orderFilter)
+                .sort({
+                    createdAt: -1,
+                    _id: -1,
+                })
+                .limit(10)
+                .lean(),
+
+            // Total customers
+            User.countDocuments({}),
+
+            // Customers created during period
+            User.countDocuments(userFilter),
+
+            // Total products
+            Product.countDocuments({}),
         ]);
 
-        const revenue = number(paymentStats[0]?.totalRevenue);
-        const paidOrders = number(paymentStats[0]?.paidOrders);
+        const summary =
+            orderSummary[0] || {};
 
-        // Assumes Payment.amount is stored in INR.
-        // If you store paise, divide revenue and chart values by 100.
-        const chart = buildSalesChart(salesData, period);
+        const orderStatusCounts = {
+            pending: 0,
+            confirmed: 0,
+            processing: 0,
+            shipped: 0,
+            delivered: 0,
+            cancelled: 0,
+            returned: 0,
+        };
 
-        return NextResponse.json(
-            {
-                success: true,
-                period,
-                stats: {
-                    totalProducts,
-                    totalOrders,
-                    totalInquiries,
-                    publishedBlogs,
-                    totalCustomers,
-                    pendingReviews,
-                    activeCarts,
-                    totalRevenue: revenue,
-                    paidOrders,
-                    averageOrderValue:
-                        paidOrders > 0 ? revenue / paidOrders : 0,
-                },
-                salesChart: chart,
-                orderStatuses: orderStatuses.map((item) => ({
-                    name: item._id,
-                    value: item.count,
-                })),
-                recentOrders: recentOrders.map((order) => ({
-                    id: order._id.toString(),
-                    orderNumber:
-                        order.orderNumber || order._id.toString(),
-                    customer: order.customerName,
-                    amount: number(
-                        order.totalAmount ??
-                        order.grandTotal ??
-                        order.total
-                    ),
-                    status: order.status || "pending",
-                    paymentStatus:
-                        order.paymentStatus || "pending",
-                    createdAt: order.createdAt,
-                })),
-                topProducts: topProducts.map((product) => ({
-                    id: product._id?.toString() || "",
-                    name: product.name,
-                    sold: product.sold,
-                })),
-            },
-            {
-                headers: {
-                    "Cache-Control": "no-store",
-                },
+        statusSummary.forEach((item) => {
+            if (
+                Object.prototype.hasOwnProperty.call(
+                    orderStatusCounts,
+                    item._id
+                )
+            ) {
+                orderStatusCounts[item._id] =
+                    item.count;
             }
-        );
-    } catch (error) {
-        console.error("Dashboard API Error:", error);
+        });
 
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Failed to load dashboard data",
+        const paymentStatusCounts = {
+            pending: 0,
+            paid: 0,
+            failed: 0,
+            refunded: 0,
+            partially_refunded: 0,
+        };
+
+        paymentSummary.forEach((item) => {
+            if (
+                Object.prototype.hasOwnProperty.call(
+                    paymentStatusCounts,
+                    item._id
+                )
+            ) {
+                paymentStatusCounts[item._id] =
+                    item.count;
+            }
+        });
+
+        const shipmentStatusCounts = {
+            not_created: 0,
+            pending: 0,
+            created: 0,
+            pickup_scheduled: 0,
+            picked_up: 0,
+            in_transit: 0,
+            out_for_delivery: 0,
+            delivered: 0,
+            cancelled: 0,
+            rto: 0,
+            lost: 0,
+            failed: 0,
+        };
+
+        shipmentSummary.forEach((item) => {
+            if (
+                Object.prototype.hasOwnProperty.call(
+                    shipmentStatusCounts,
+                    item._id
+                )
+            ) {
+                shipmentStatusCounts[item._id] =
+                    item.count;
+            }
+        });
+
+        const totalOrders =
+            summary.totalOrders || 0;
+
+        const pendingOrders =
+            orderStatusCounts.pending +
+            orderStatusCounts.confirmed +
+            orderStatusCounts.processing;
+
+        const activeShipments =
+            shipmentStatusCounts.created +
+            shipmentStatusCounts.pickup_scheduled +
+            shipmentStatusCounts.picked_up +
+            shipmentStatusCounts.in_transit +
+            shipmentStatusCounts.out_for_delivery;
+
+        // 4. Return dashboard data
+        return NextResponse.json({
+            success: true,
+
+            period,
+
+            stats: {
+                totalOrders,
+
+                totalOrderValue:
+                    summary.totalOrderValue || 0,
+
+                codOrders:
+                    summary.codOrders || 0,
+
+                prepaidOrders:
+                    summary.prepaidOrders || 0,
+
+                pendingCODAmount:
+                    summary.pendingCODAmount || 0,
+
+                collectedRevenue:
+                    summary.collectedRevenue || 0,
+
+                prepaidRevenue:
+                    summary.prepaidRevenue || 0,
+
+                codCollectedAmount:
+                    summary.codCollectedAmount || 0,
+
+                averageOrderValue:
+                    Math.round(
+                        (summary.averageOrderValue ||
+                            0) * 100
+                    ) / 100,
+
+                pendingOrders,
+
+                deliveredOrders:
+                    orderStatusCounts.delivered,
+
+                cancelledOrders:
+                    orderStatusCounts.cancelled,
+
+                activeShipments,
+
+                totalCustomers,
+                newCustomers,
+                totalProducts,
+
+                // Compatibility with older UI
+                paidRevenue:
+                    summary.collectedRevenue || 0,
             },
-            { status: 500 }
+
+            orderStatuses:
+                orderStatusCounts,
+
+            paymentStatuses:
+                paymentStatusCounts,
+
+            shipmentStatuses:
+                shipmentStatusCounts,
+
+            recentOrders:
+                recentOrders.map(
+                    formatRecentOrder
+                ),
+        });
+    } catch (error) {
+        console.error(
+            "GET admin dashboard error:",
+            error
+        );
+
+        return errorResponse(
+            "Unable to fetch dashboard statistics."
         );
     }
 }

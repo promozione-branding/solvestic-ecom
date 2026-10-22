@@ -7,262 +7,593 @@ import mongoose from "mongoose";
 
 import connectDB from "@/lib/mongodb";
 import razorpay from "@/lib/razorpay";
+
 import Order from "@/models/order.model";
 import Payment from "@/models/payment.model";
 import Cart from "@/models/cart.model";
 
+import { createShiprocketOrder } from "@/lib/create-shiprocket-order";
+
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-async function createShiprocketOrder(orderId, cookieStore) {
-    const baseUrl =
-        process.env.NEXT_PUBLIC_SITE_URL ||
-        process.env.SITE_URL ||
-        "http://localhost:3000";
+function errorResponse(message, status = 400) {
+    return NextResponse.json(
+        { success: false, message },
+        { status }
+    );
+}
 
-    const response = await fetch(
-        `${baseUrl}/api/user/orders/${orderId}/shiprocket`,
-        {
-            method: "POST",
-            headers: {
-                Cookie: cookieStore.toString(),
-            },
-            cache: "no-store",
-        }
+function verifySignature({
+    razorpayOrderId,
+    razorpayPaymentId,
+    signature,
+}) {
+    if (!/^[a-f0-9]{64}$/i.test(signature)) {
+        return false;
+    }
+
+    const expected = crypto
+        .createHmac(
+            "sha256",
+            process.env.RAZORPAY_KEY_SECRET
+        )
+        .update(
+            `${razorpayOrderId}|${razorpayPaymentId}`
+        )
+        .digest("hex");
+
+    const receivedBuffer = Buffer.from(
+        signature,
+        "hex"
     );
 
-    const result = await response.json();
+    const expectedBuffer = Buffer.from(
+        expected,
+        "hex"
+    );
 
-    if (!response.ok) {
-        console.error("Shiprocket order creation failed:", {
-            orderId: String(orderId),
-            status: response.status,
-            message: result.message,
-        });
+    return (
+        receivedBuffer.length ===
+        expectedBuffer.length &&
+        crypto.timingSafeEqual(
+            receivedBuffer,
+            expectedBuffer
+        )
+    );
+}
+
+function cartItemKey(productId, variant) {
+    const size =
+        typeof variant === "object"
+            ? variant?.size || ""
+            : variant || "";
+
+    return `${String(productId)}:${String(size)
+        .trim()
+        .toLowerCase()}`;
+}
+
+async function removePurchasedCartItems(
+    userId,
+    purchasedItems
+) {
+    const purchasedKeys = new Set(
+        purchasedItems.map((item) =>
+            cartItemKey(
+                item.productId,
+                item.variant
+            )
+        )
+    );
+
+    const cart = await Cart.findOne({
+        userId,
+    });
+
+    if (!cart?.items?.length) {
+        return;
+    }
+
+    const remainingItems = cart.items.filter(
+        (item) =>
+            !purchasedKeys.has(
+                cartItemKey(
+                    item.productId,
+                    item.variant
+                )
+            )
+    );
+
+    if (
+        remainingItems.length !==
+        cart.items.length
+    ) {
+        cart.items = remainingItems;
+        await cart.save();
+    }
+}
+
+/**
+ * Shiprocket failures must not invalidate
+ * an already captured Razorpay payment.
+ */
+async function createShipmentSafely(orderId) {
+    try {
+        const result =
+            await createShiprocketOrder(orderId);
+
+        if (!result.success) {
+            console.error(
+                "Razorpay Shiprocket creation needs attention:",
+                {
+                    orderId: String(orderId),
+                    status: result.status,
+                    message: result.message,
+                }
+            );
+        }
+
+        return {
+            success: result.success,
+            status: result.status,
+            shiprocketOrderId:
+                result.shiprocketOrderId || null,
+            shipmentId:
+                result.shipmentId || null,
+        };
+    } catch (error) {
+        console.error(
+            "Razorpay Shiprocket creation error:",
+            error
+        );
 
         return {
             success: false,
-            message: result.message || "Shiprocket order creation failed.",
+            status: "failed",
+            shiprocketOrderId: null,
+            shipmentId: null,
         };
     }
-
-    return { success: true, shipment: result.shipment };
 }
 
 export async function POST(request) {
     try {
+        // 1. Validate configuration
+        if (
+            !process.env.JWT_USER_SECRET ||
+            !process.env.RAZORPAY_KEY_SECRET
+        ) {
+            console.error(
+                "Payment verification configuration missing."
+            );
+
+            return errorResponse(
+                "Payment service is unavailable.",
+                500
+            );
+        }
+
+        // 2. Authenticate customer
         const cookieStore = await cookies();
-        const token = cookieStore.get("solvestic_user_token")?.value;
+
+        const token = cookieStore.get(
+            "solvestic_user_token"
+        )?.value;
 
         if (!token) {
-            return NextResponse.json(
-                { success: false, message: "Please log in to verify payment." },
-                { status: 401 }
+            return errorResponse(
+                "Please log in to verify your payment.",
+                401
             );
         }
 
-        if (!process.env.JWT_USER_SECRET || !process.env.RAZORPAY_KEY_SECRET) {
-            throw new Error("Required authentication or Razorpay configuration is missing.");
-        }
+        let decoded;
 
-        const session = jwt.verify(token, process.env.JWT_USER_SECRET);
+        try {
+            decoded = jwt.verify(
+                token,
+                process.env.JWT_USER_SECRET
+            );
+        } catch {
+            return errorResponse(
+                "Your session has expired.",
+                401
+            );
+        }
 
         if (
-            session.type !== "customer" ||
-            !mongoose.Types.ObjectId.isValid(session.userId)
+            decoded.type !== "customer" ||
+            !mongoose.isValidObjectId(
+                decoded.userId
+            )
         ) {
-            return NextResponse.json(
-                { success: false, message: "Invalid customer session." },
-                { status: 401 }
+            return errorResponse(
+                "Invalid customer session.",
+                401
             );
         }
+
+        // 3. Validate payment response
+        const body = await request
+            .json()
+            .catch(() => ({}));
 
         const {
             orderId,
             razorpay_order_id,
             razorpay_payment_id,
             razorpay_signature,
-        } = await request.json();
+        } = body;
 
         if (
-            !mongoose.Types.ObjectId.isValid(orderId) ||
-            !razorpay_order_id ||
-            !razorpay_payment_id ||
-            !razorpay_signature
+            !mongoose.isValidObjectId(orderId) ||
+            ![
+                razorpay_order_id,
+                razorpay_payment_id,
+                razorpay_signature,
+            ].every(
+                (value) =>
+                    typeof value === "string" &&
+                    value.length > 0
+            )
         ) {
-            return NextResponse.json(
-                { success: false, message: "Missing or invalid payment details." },
-                { status: 400 }
+            return errorResponse(
+                "Invalid payment verification details."
+            );
+        }
+
+        // 4. Verify Razorpay signature
+        const signatureValid =
+            verifySignature({
+                razorpayOrderId:
+                    razorpay_order_id,
+                razorpayPaymentId:
+                    razorpay_payment_id,
+                signature:
+                    razorpay_signature,
+            });
+
+        if (!signatureValid) {
+            return errorResponse(
+                "Payment signature verification failed.",
+                400
             );
         }
 
         await connectDB();
 
+        // 5. Find customer's order
         const order = await Order.findOne({
             _id: orderId,
-            userId: session.userId,
+            userId: decoded.userId,
         });
 
         if (!order) {
-            return NextResponse.json(
-                { success: false, message: "Order not found." },
-                { status: 404 }
+            return errorResponse(
+                "Order not found.",
+                404
             );
         }
-
-        const payment = await Payment.findOne({
-            orderId: order._id,
-            userId: session.userId,
-            razorpayOrderId: razorpay_order_id,
-            provider: "razorpay",
-        }).select("+razorpaySignature");
-
-        if (!payment) {
-            return NextResponse.json(
-                { success: false, message: "Payment record not found." },
-                { status: 404 }
-            );
-        }
-
-        if (order.orderStatus === "cancelled") {
-            return NextResponse.json(
-                { success: false, message: "This order has been cancelled." },
-                { status: 409 }
-            );
-        }
-
-        if (payment.razorpayPaymentId &&
-            payment.razorpayPaymentId !== razorpay_payment_id &&
-            payment.status === "captured") {
-            return NextResponse.json(
-                { success: false, message: "A different payment is already recorded for this order." },
-                { status: 409 }
-            );
-        }
-
-        // Verify Checkout signature.
-        const expectedSignature = crypto
-            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-            .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-            .digest("hex");
-
-        const received = Buffer.from(razorpay_signature, "hex");
-        const expected = Buffer.from(expectedSignature, "hex");
 
         if (
-            received.length !== expected.length ||
-            !crypto.timingSafeEqual(received, expected)
+            order.paymentMethod !==
+            "razorpay"
         ) {
-            return NextResponse.json(
-                { success: false, message: "Payment signature verification failed." },
-                { status: 400 }
+            return errorResponse(
+                "This order does not require Razorpay verification.",
+                400
             );
         }
 
-        const expectedAmount = Math.round(Number(order.totalAmount) * 100);
+        // 6. Find matching payment record
+        const payment =
+            await Payment.findOne({
+                orderId: order._id,
+                userId: decoded.userId,
+                provider: "razorpay",
+                razorpayOrderId:
+                    razorpay_order_id,
+            });
 
-        // Fetch the payment from Razorpay to verify its real status.
-        let razorpayPayment = await razorpay.payments.fetch(
-            razorpay_payment_id
+        if (!payment) {
+            return errorResponse(
+                "Matching payment record not found.",
+                404
+            );
+        }
+
+        if (
+            payment.razorpayPaymentId &&
+            payment.razorpayPaymentId !==
+            razorpay_payment_id &&
+            payment.status === "captured"
+        ) {
+            return errorResponse(
+                "Another payment is already recorded for this order.",
+                409
+            );
+        }
+
+        // 7. Verify payment with Razorpay
+        const expectedAmount = Math.round(
+            Number(order.totalAmount) * 100
         );
 
         if (
-            razorpayPayment.order_id !== razorpay_order_id ||
-            Number(razorpayPayment.amount) !== expectedAmount ||
-            razorpayPayment.currency !== (order.currency || "INR")
+            !Number.isSafeInteger(
+                expectedAmount
+            ) ||
+            expectedAmount <= 0
         ) {
-            return NextResponse.json(
-                { success: false, message: "Payment details do not match this order." },
-                { status: 400 }
+            return errorResponse(
+                "Invalid order amount.",
+                409
             );
         }
 
-        // Capture only if Razorpay reports an authorized payment.
-        if (razorpayPayment.status === "authorized") {
-            razorpayPayment = await razorpay.payments.capture(
-                razorpay_payment_id,
-                expectedAmount,
-                order.currency || "INR"
+        let gatewayPayment =
+            await razorpay.payments.fetch(
+                razorpay_payment_id
+            );
+
+        if (
+            gatewayPayment.order_id !==
+            razorpay_order_id ||
+            Number(gatewayPayment.amount) !==
+            expectedAmount ||
+            gatewayPayment.currency !==
+            (order.currency || "INR")
+        ) {
+            return errorResponse(
+                "Razorpay payment details do not match this order.",
+                400
             );
         }
 
-        if (razorpayPayment.status !== "captured") {
-            if (razorpayPayment.status === "failed") {
-                payment.status = "failed";
-                payment.razorpayPaymentId = razorpay_payment_id;
-                payment.failureReason =
-                    razorpayPayment.error_description ||
-                    razorpayPayment.error_reason ||
-                    "Payment failed";
-                await payment.save();
+        // 8. Capture authorized payment
+        if (
+            gatewayPayment.status ===
+            "authorized"
+        ) {
+            try {
+                gatewayPayment =
+                    await razorpay.payments.capture(
+                        razorpay_payment_id,
+                        expectedAmount,
+                        order.currency || "INR"
+                    );
+            } catch (captureError) {
+                // Capture might have completed
+                // even if the API timed out.
+                gatewayPayment =
+                    await razorpay.payments.fetch(
+                        razorpay_payment_id
+                    );
+
+                if (
+                    gatewayPayment.status !==
+                    "captured"
+                ) {
+                    console.error(
+                        "Razorpay capture error:",
+                        captureError
+                    );
+
+                    return errorResponse(
+                        "Payment capture is pending. Please check your order before retrying.",
+                        409
+                    );
+                }
+            }
+        }
+
+        // 9. Handle unsuccessful payment
+        if (
+            gatewayPayment.status !==
+            "captured"
+        ) {
+            if (
+                gatewayPayment.status ===
+                "failed"
+            ) {
+                await Payment.updateOne(
+                    {
+                        _id: payment._id,
+                        status: {
+                            $ne: "captured",
+                        },
+                    },
+                    {
+                        $set: {
+                            status: "failed",
+                            razorpayPaymentId:
+                                razorpay_payment_id,
+                            failureReason:
+                                gatewayPayment.error_description ||
+                                "Payment failed.",
+                        },
+                    }
+                );
             }
 
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Payment has not been captured.",
-                    paymentStatus: razorpayPayment.status,
+                    message:
+                        "Payment has not been captured.",
+                    paymentStatus:
+                        gatewayPayment.status,
                 },
                 { status: 409 }
             );
         }
 
-        // Save payment confirmation first.
-        payment.razorpayPaymentId = razorpay_payment_id;
-        payment.razorpaySignature = razorpay_signature;
-        payment.status = "captured";
-        payment.paidAt = payment.paidAt || new Date();
-        payment.failureReason = "";
-
-        await payment.save();
-
-        // IMPORTANT: Save the order as paid BEFORE calling Shiprocket.
-        order.paymentStatus = "paid";
-        order.orderStatus = "confirmed";
-        order.paidAt = order.paidAt || new Date();
-
-        await order.save();
-
-        // Clear the database cart only after payment is confirmed.
-        await Cart.findOneAndUpdate(
-            { userId: order.userId },
-            { $set: { items: [] } }
-        );
-
-        // If Shiprocket is unavailable, payment remains successful.
-        let shipmentResult = { success: false };
-
-        try {
-            shipmentResult = await createShiprocketOrder(
-                order._id,
-                cookieStore
+        // 10. Save captured payment
+        const paymentUpdate =
+            await Payment.updateOne(
+                {
+                    _id: payment._id,
+                    $or: [
+                        {
+                            razorpayPaymentId:
+                                razorpay_payment_id,
+                        },
+                        {
+                            razorpayPaymentId: "",
+                        },
+                        {
+                            razorpayPaymentId: null,
+                        },
+                        {
+                            razorpayPaymentId: {
+                                $exists: false,
+                            },
+                        },
+                    ],
+                },
+                {
+                    $set: {
+                        status: "captured",
+                        razorpayPaymentId:
+                            razorpay_payment_id,
+                        razorpaySignature:
+                            razorpay_signature,
+                        failureReason: "",
+                    },
+                }
             );
-        } catch (shipmentError) {
-            console.error(
-                "Shiprocket request failed:",
-                shipmentError.message
+
+        if (
+            paymentUpdate.matchedCount !== 1
+        ) {
+            return errorResponse(
+                "Payment was captured but needs reconciliation. Please contact support.",
+                409
             );
         }
 
+        // 11. Confirm order atomically
+        const now = new Date();
+
+        const confirmation =
+            await Order.updateOne(
+                {
+                    _id: order._id,
+                    userId: decoded.userId,
+                    paymentMethod: "razorpay",
+                    paymentStatus: "pending",
+                    orderStatus: {
+                        $ne: "cancelled",
+                    },
+                },
+                {
+                    $set: {
+                        paymentStatus: "paid",
+                        orderStatus: "confirmed",
+                        paidAt: now,
+                        confirmedAt: now,
+                    },
+                }
+            );
+
+        const confirmedOrder =
+            await Order.findById(
+                order._id
+            ).lean();
+
+        if (
+            confirmedOrder?.paymentStatus !==
+            "paid"
+        ) {
+            return errorResponse(
+                "Payment was captured, but the order requires reconciliation. Please contact support.",
+                409
+            );
+        }
+
+        // 12. Clean purchased items from cart
+        if (
+            confirmation.modifiedCount === 1
+        ) {
+            try {
+                await removePurchasedCartItems(
+                    decoded.userId,
+                    confirmedOrder.items
+                );
+            } catch (cartError) {
+                console.error(
+                    "Cart cleanup failed:",
+                    cartError
+                );
+            }
+        }
+
+        // 13. NEW: Automatic Shiprocket creation
+        // Only after payment is captured
+        // and order is confirmed.
+        let shipment = {
+            success: false,
+            status: "not_eligible",
+            shiprocketOrderId: null,
+            shipmentId: null,
+        };
+
+        if (
+            ["confirmed", "processing"].includes(
+                confirmedOrder.orderStatus
+            )
+        ) {
+            shipment =
+                await createShipmentSafely(
+                    confirmedOrder._id
+                );
+        }
+
+        // 14. Return successful payment response
         return NextResponse.json({
             success: true,
-            message: "Payment verified successfully.",
-            orderId: String(order._id),
-            orderNumber: order.orderNumber,
+
+            message:
+                "Payment verified successfully.",
+
+            orderId: String(
+                confirmedOrder._id
+            ),
+
+            orderNumber:
+                confirmedOrder.orderNumber,
+
+            paymentMethod: "razorpay",
             paymentStatus: "paid",
-            shipmentCreated: shipmentResult.success,
-            shipmentMessage: shipmentResult.success
-                ? "Shiprocket order created."
-                : "Payment succeeded. Shipment creation needs retry.",
+
+            orderStatus:
+                confirmedOrder.orderStatus,
+
+            totalAmount:
+                confirmedOrder.totalAmount,
+
+            shipmentCreated:
+                shipment.success,
+
+            shipmentCreationStatus:
+                shipment.status,
+
+            shiprocketOrderId:
+                shipment.shiprocketOrderId,
+
+            shipmentId:
+                shipment.shipmentId,
         });
     } catch (error) {
         console.error(
-            "Payment verification error:",
-            error?.message || error
+            "Verify payment error:",
+            error
         );
 
-        return NextResponse.json(
-            { success: false, message: "Unable to verify payment. Please try again." },
-            { status: 500 }
+        return errorResponse(
+            "Unable to verify payment right now. Check My Orders before retrying.",
+            500
         );
     }
 }

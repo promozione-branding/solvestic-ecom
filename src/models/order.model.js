@@ -12,7 +12,7 @@ const OrderItemSchema = new mongoose.Schema(
         slug: { type: String, default: "" },
         image: { type: String, default: "" },
         variant: { type: String, default: "" },
-        quantity: { type: Number, required: true, min: 1 },
+        quantity: { type: Number, required: true, min: 1, max: 99 },
         unitPrice: { type: Number, required: true, min: 0 },
         lineTotal: { type: Number, required: true, min: 0 },
     },
@@ -21,14 +21,14 @@ const OrderItemSchema = new mongoose.Schema(
 
 const AddressSchema = new mongoose.Schema(
     {
-        fullName: { type: String, required: true },
-        mobile: { type: String, required: true },
-        addressLine1: { type: String, required: true },
-        addressLine2: { type: String, default: "" },
-        city: { type: String, required: true },
-        state: { type: String, required: true },
-        country: { type: String, default: "India" },
-        pincode: { type: String, required: true },
+        fullName: { type: String, required: true, trim: true },
+        mobile: { type: String, required: true, trim: true },
+        addressLine1: { type: String, required: true, trim: true },
+        addressLine2: { type: String, default: "", trim: true },
+        city: { type: String, required: true, trim: true },
+        state: { type: String, required: true, trim: true },
+        country: { type: String, default: "India", trim: true },
+        pincode: { type: String, required: true, trim: true },
     },
     { _id: false }
 );
@@ -54,7 +54,7 @@ const ShipmentSchema = new mongoose.Schema(
         shipmentId: { type: String, default: "" },
         shiprocketOrderId: { type: String, default: "" },
         channelOrderId: { type: String, default: "" },
-        awbCode: { type: String, default: "", index: true },
+        awbCode: { type: String, default: "" },
         courierName: { type: String, default: "" },
         trackingUrl: { type: String, default: "" },
 
@@ -80,6 +80,7 @@ const ShipmentSchema = new mongoose.Schema(
         currentStatusText: { type: String, default: "" },
         estimatedDeliveryDate: { type: Date, default: null },
         lastSyncedAt: { type: Date, default: null },
+
         trackingEvents: {
             type: [TrackingEventSchema],
             default: [],
@@ -90,15 +91,9 @@ const ShipmentSchema = new mongoose.Schema(
             enum: ["not_started", "processing", "created", "failed"],
             default: "not_started",
         },
-        shiprocketCreateError: {
-            type: String,
-            default: "",
-        },
-        shiprocketCreateLockedAt: {
-            type: Date,
-            default: null,
-        },
 
+        shiprocketCreateError: { type: String, default: "" },
+        shiprocketCreateLockedAt: { type: Date, default: null },
         lastError: { type: String, default: "" },
     },
     { _id: false }
@@ -110,6 +105,7 @@ const OrderSchema = new mongoose.Schema(
             type: String,
             required: true,
             unique: true,
+            trim: true,
         },
 
         userId: {
@@ -130,7 +126,8 @@ const OrderSchema = new mongoose.Schema(
             type: [OrderItemSchema],
             required: true,
             validate: {
-                validator: (items) => items.length > 0,
+                validator: (items) =>
+                    Array.isArray(items) && items.length > 0,
                 message: "An order must contain at least one item.",
             },
         },
@@ -140,15 +137,39 @@ const OrderSchema = new mongoose.Schema(
             required: true,
         },
 
-        currency: { type: String, default: "INR" },
+        currency: {
+            type: String,
+            enum: ["INR"],
+            default: "INR",
+        },
+
         subtotal: { type: Number, required: true, min: 0 },
         shippingFee: { type: Number, required: true, min: 0 },
         discount: { type: Number, default: 0, min: 0 },
-        totalAmount: { type: Number, required: true, min: 0 },
+
+        couponCode: {
+            type: String,
+            trim: true,
+            uppercase: true,
+            default: null,
+        },
+
+        couponDiscount: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+
+        totalAmount: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
 
         paymentMethod: {
             type: String,
             enum: ["razorpay", "cod"],
+            required: true,
             default: "razorpay",
         },
 
@@ -180,8 +201,25 @@ const OrderSchema = new mongoose.Schema(
             index: true,
         },
 
-        paidAt: { type: Date, default: null },
-        cancelledAt: { type: Date, default: null },
+        confirmedAt: {
+            type: Date,
+            default: null,
+        },
+
+        paidAt: {
+            type: Date,
+            default: null,
+        },
+
+        codCollectedAt: {
+            type: Date,
+            default: null,
+        },
+
+        cancelledAt: {
+            type: Date,
+            default: null,
+        },
 
         shipment: {
             type: ShipmentSchema,
@@ -189,6 +227,35 @@ const OrderSchema = new mongoose.Schema(
         },
     },
     { timestamps: true }
+);
+
+// Customer order history
+OrderSchema.index({
+    userId: 1,
+    createdAt: -1,
+});
+
+// Admin order filtering
+OrderSchema.index({
+    orderStatus: 1,
+    createdAt: -1,
+});
+
+// Payment reporting
+OrderSchema.index({
+    paymentMethod: 1,
+    paymentStatus: 1,
+    createdAt: -1,
+});
+
+// Shiprocket tracking lookup
+OrderSchema.index(
+    { "shipment.awbCode": 1 },
+    {
+        partialFilterExpression: {
+            "shipment.awbCode": { $type: "string", $gt: "" },
+        },
+    }
 );
 
 const Order =

@@ -40,6 +40,8 @@ export default function OrderTrackingPage() {
     const [error, setError] = useState("");
 
     const fetchTracking = async (refresh = false) => {
+        if (refreshing) return;
+
         try {
             setError("");
 
@@ -49,16 +51,28 @@ export default function OrderTrackingPage() {
                 setLoading(true);
             }
 
-            const response = await axios.get(
-                `/api/user/orders/${orderId}/tracking`
-            );
+            const response = await axios.get(`/api/user/orders/${orderId}/tracking`, {
+                params: refresh
+                    ? { refresh: "true" }
+                    : {},
+                withCredentials: true,
+            });
+
+            if (!response.data?.success) {
+                throw new Error(
+                    response.data?.message ||
+                    "Unable to fetch tracking."
+                );
+            }
 
             setData(response.data);
         } catch (err) {
-            setError(
+            const message =
                 err.response?.data?.message ||
-                "Unable to load your order tracking."
-            );
+                err.message ||
+                "Unable to load tracking.";
+
+            setError(message);
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -174,7 +188,7 @@ export default function OrderTrackingPage() {
                                     refreshing ? "animate-spin" : ""
                                 }
                             />
-                            Refresh tracking
+                            {refreshing ? "Updating..." : "Refresh tracking"}
                         </button>
                     </div>
 

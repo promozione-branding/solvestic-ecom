@@ -144,6 +144,7 @@ export default function Cart() {
     const [appliedCoupon, setAppliedCoupon] = useState(false);
     const [couponMessage, setCouponMessage] = useState("");
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [couponLoading, setCouponLoading] = useState(false);
 
     const request = useCallback(async (url, options = {}) => {
         const response = await fetch(url, {
@@ -267,6 +268,36 @@ export default function Cart() {
         loadCart();
     }, [loadCart]);
 
+    // Coupon eligibility comes from the server, never from a local code check.
+    useEffect(() => {
+        if (!isAuthenticated) {
+            setAppliedCoupon(false);
+            setCoupon("");
+            return;
+        }
+        let cancelled = false;
+        const checkCoupon = async () => {
+            setCouponLoading(true);
+            try {
+                const data = await request("/api/user/coupon");
+                if (cancelled) return;
+                const eligible = data.eligible === true;
+                setAppliedCoupon(eligible);
+                setCoupon(eligible ? "WELCOME10" : "");
+                setCouponMessage(eligible ? "WELCOME10 automatically applied — 10% off!" : "");
+            } catch (err) {
+                if (!cancelled) {
+                    setAppliedCoupon(false);
+                    setCouponMessage("");
+                }
+            } finally {
+                if (!cancelled) setCouponLoading(false);
+            }
+        };
+        checkCoupon();
+        return () => { cancelled = true; };
+    }, [isAuthenticated, request]);
+
     const subtotal = useMemo(
         () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
         [items]
@@ -278,7 +309,7 @@ export default function Cart() {
 
     const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
     const productDiscount = Math.max(0, originalTotal - subtotal);
-    const couponDiscount = appliedCoupon ? Math.round(subtotal * 0.1) : 0;
+    const couponDiscount = appliedCoupon ? Math.round(subtotal * 100 * 0.1) / 100 : 0;
     const shipping = 0; // Free shipping on all orders
     const total = Math.max(0, subtotal - couponDiscount);
 
@@ -396,14 +427,26 @@ export default function Cart() {
         }
     };
 
-    const applyCoupon = (event) => {
+    const applyCoupon = async (event) => {
         event.preventDefault();
-
-        if (coupon.trim().toUpperCase() === "WELCOME10") {
-            setAppliedCoupon(true);
-            setCouponMessage("WELCOME10 applied — you saved 10%!");
-        } else {
-            setCouponMessage("Invalid coupon code. Try WELCOME10.");
+        if (!isAuthenticated) {
+            setCouponMessage("Log in to receive your first-order discount.");
+            return;
+        }
+        if (coupon.trim().toUpperCase() !== "WELCOME10") {
+            setCouponMessage("Invalid coupon code.");
+            return;
+        }
+        setCouponLoading(true);
+        try {
+            const data = await request("/api/user/coupon");
+            setAppliedCoupon(data.eligible === true);
+            setCouponMessage(data.eligible ? "WELCOME10 applied — 10% off!" : "This coupon is no longer available for your account.");
+        } catch (error) {
+            setAppliedCoupon(false);
+            setCouponMessage(error.message || "Unable to validate coupon.");
+        } finally {
+            setCouponLoading(false);
         }
     };
 
@@ -707,13 +750,13 @@ export default function Cart() {
                                                         setCouponMessage("");
                                                     }}
                                                     placeholder="Enter code"
-                                                    disabled={appliedCoupon}
+                                                    disabled={appliedCoupon || couponLoading}
                                                     className="h-12 w-full rounded-xl border border-gray-200 bg-white pl-10 pr-3 text-sm outline-none transition placeholder:text-gray-400 focus:border-[#7D45C2] focus:ring-2 focus:ring-[#7D45C2]/10 disabled:bg-gray-50"
                                                 />
                                             </div>
                                             <button
                                                 type="submit"
-                                                disabled={appliedCoupon}
+                                                disabled={appliedCoupon || couponLoading}
                                                 className="rounded-xl border border-[#7D45C2] px-4 text-sm font-bold text-[#7D45C2] transition hover:bg-[#F1E8FA] disabled:opacity-50"
                                             >
                                                 Apply
@@ -729,7 +772,7 @@ export default function Cart() {
                                         )}
                                         {!appliedCoupon && (
                                             <p className="text-xs text-gray-400">
-                                                Demo code: WELCOME10
+                                                WELCOME10 is automatically applied to eligible accounts
                                             </p>
                                         )}
                                     </form>
@@ -799,8 +842,8 @@ export default function Cart() {
                                     </div>
 
                                     <Link
-                                        disabled={items.length === 0 || items.some((item) => !item.inStock)}
-                                        href={"/checkout"}
+                                        aria-disabled={items.length === 0 || items.some((item) => !item.inStock)}
+                                        href={items.length === 0 || items.some((item) => !item.inStock) ? "#" : "/checkout"}
                                         className="group flex w-full items-center justify-center gap-2 rounded-xl bg-[#7D45C2] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#6937AA] disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         Proceed to Checkout

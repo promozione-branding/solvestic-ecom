@@ -28,13 +28,6 @@ import toast from "react-hot-toast";
 
 const WISHLIST_KEY = "solvestic_wishlist";
 
-const formatPrice = (price) =>
-    new Intl.NumberFormat("en-IN", {
-        style: "currency",
-        currency: "INR",
-        maximumFractionDigits: 0,
-    }).format(Number(price) || 0);
-
 const getProductImages = (product) => {
     const images = (product?.images || [])
         .map((image) =>
@@ -52,27 +45,11 @@ const getProductImages = (product) => {
 const getProductId = (product) =>
     String(product?._id || product?.id || "");
 
-const getCategoryName = (product) => {
-    const category = product?.categoryId || product?.category;
-
-    if (typeof category === "string") return category;
-
-    return category?.name || category?.title || "Skincare";
-};
-
 const getVariantPrice = (variant) =>
     Number(variant?.price ?? 0);
 
 const getVariantOldPrice = (variant) =>
     Number(variant?.oldPrice ?? variant?.mrp ?? variant?.price ?? 0);
-
-const getSpecifications = (product) =>
-    Array.isArray(product?.specifications)
-        ? product.specifications.map((spec) => ({
-            key: spec.key || spec.name || "Details",
-            value: spec.value ?? "",
-        }))
-        : [];
 
 const getVariantName = (variant) => String(variant?.size || variant?.name || "");
 
