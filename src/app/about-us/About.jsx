@@ -305,7 +305,7 @@ export default function About() {
           <div className="max-w-[680px] text-sm  text-black sm:text-base">
 
             <p>
-              That became the thought behind Solvestic.
+              That became the thought behind Solvestic Wellness Pvt. Ltd.
             </p>
 
             <p className="mt-3 md:mt-6">

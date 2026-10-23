@@ -276,7 +276,7 @@ export default function Footer() {
                                     { name: "Home", href: "/" },
                                     // { name: "About Us", href: "/about-us" },
                                     { name: "Our Products", href: "/our-products" },
-                                    { name: "Our Story", href: "/about-us" },
+                                    { name: "About Us", href: "/about-us" },
                                     { name: "Contact", href: "/contact-us" },
                                     { name: "Newsletter", href: "/newsletter" },
                                 ].map((item, idx) => (
