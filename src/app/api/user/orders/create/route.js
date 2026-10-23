@@ -343,38 +343,54 @@ export async function POST(request) {
         }
 
         // 7. Check first-order WELCOME10 eligibility
-        const previousPurchase =
-            await Order.exists({
-                userId,
-                $or: [
-                    {
-                        paymentMethod:
-                            "razorpay",
-                        paymentStatus: {
-                            $in: [
-                                "paid",
-                                "refunded",
-                                "partially_refunded",
-                            ],
-                        },
+        // Check whether WELCOME10 was already redeemed
+        // or reserved by an unfinished online payment.
+
+        const couponAlreadyUsed = await Order.exists({
+            userId,
+            couponCode: WELCOME_COUPON,
+            $or: [
+                {
+                    paymentMethod: "razorpay",
+                    paymentStatus: {
+                        $in: [
+                            "paid",
+                            "refunded",
+                            "partially_refunded",
+                        ],
                     },
-                    {
-                        paymentMethod: "cod",
-                        orderStatus: {
-                            $in: [
-                                "confirmed",
-                                "processing",
-                                "shipped",
-                                "delivered",
-                                "returned",
-                            ],
-                        },
+                },
+                {
+                    paymentMethod: "cod",
+                    orderStatus: {
+                        $in: [
+                            "confirmed",
+                            "processing",
+                            "shipped",
+                            "delivered",
+                            "returned",
+                        ],
                     },
-                ],
-            });
+                },
+                {
+                    paymentMethod: "razorpay",
+                    paymentStatus: "pending",
+                    orderStatus: "pending",
+                },
+            ],
+        });
+
+        const hasComboPack = orderItems.some(
+            (item) =>
+                String(item.name || "")
+                    .trim()
+                    .toLowerCase() === "combo pack"
+        );
 
         const applyWelcome10 =
-            !previousPurchase;
+            !couponAlreadyUsed &&
+            paymentMethod === "razorpay" &&
+            !hasComboPack;
 
         const couponDiscountPaise =
             applyWelcome10

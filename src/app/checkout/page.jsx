@@ -25,6 +25,7 @@ import {
     Loader2,
     Tag,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 import AddressManager from "@/components/user/AddressManager";
 
@@ -296,6 +297,7 @@ export default function CheckoutPage() {
 
                 if (!cancelled) {
                     setWelcomeCoupon(
+                        data.success === true &&
                         data.eligible === true
                     );
                 }
@@ -345,7 +347,23 @@ export default function CheckoutPage() {
 
     const subtotal = subtotalPaise / 100;
 
-    const couponDiscount = welcomeCoupon
+    // const couponDiscount = welcomeCoupon
+    //     ? Math.round(subtotalPaise * 0.1) / 100
+    //     : 0;
+
+    const hasComboPack = items.some(
+        (item) =>
+            String(item.name || "")
+                .trim()
+                .toLowerCase() === "combo pack"
+    );
+
+    const canApplyCoupon =
+        welcomeCoupon &&
+        paymentMethod === "razorpay" &&
+        !hasComboPack;
+
+    const couponDiscount = canApplyCoupon
         ? Math.round(subtotalPaise * 0.1) / 100
         : 0;
 
@@ -871,14 +889,21 @@ export default function CheckoutPage() {
                                     <input
                                         type="radio"
                                         name="paymentMethod"
-                                        disabled
                                         value="cod"
-                                        checked={
-                                            paymentMethod === "cod"
-                                        }
-                                        onChange={() =>
-                                            setPaymentMethod("cod")
-                                        }
+                                        checked={paymentMethod === "cod"}
+                                        onChange={() => {
+                                            setPaymentMethod("cod");
+
+                                            if (welcomeCoupon && !hasComboPack) {
+                                                toast.error(
+                                                    "WELCOME10 is only valid for prepaid orders. Coupon discount removed.",
+                                                    {
+                                                        duration: 4000,
+                                                        position: "top-center",
+                                                    }
+                                                );
+                                            }
+                                        }}
                                         className="accent-[#7D45C2]"
                                     />
 
@@ -999,8 +1024,7 @@ export default function CheckoutPage() {
                             )}
 
                             <div className="my-6 border-t border-gray-100" />
-
-                            {welcomeCoupon && (
+                            {canApplyCoupon && (
                                 <div className="mb-5 flex items-center gap-3 rounded-2xl bg-[#F7F2FC] p-4">
                                     <Tag
                                         size={19}
@@ -1013,7 +1037,7 @@ export default function CheckoutPage() {
                                         </p>
 
                                         <p className="mt-1 text-xs text-gray-500">
-                                            10% off your first order
+                                            10% off your order
                                         </p>
                                     </div>
                                 </div>

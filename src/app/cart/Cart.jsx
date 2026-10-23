@@ -281,10 +281,17 @@ export default function Cart() {
             try {
                 const data = await request("/api/user/coupon");
                 if (cancelled) return;
-                const eligible = data.eligible === true;
+                const eligible =
+                    data.success === true &&
+                    data.eligible === true;
+
                 setAppliedCoupon(eligible);
                 setCoupon(eligible ? "WELCOME10" : "");
-                setCouponMessage(eligible ? "WELCOME10 automatically applied — 10% off!" : "");
+                setCouponMessage(
+                    eligible
+                        ? "WELCOME10 automatically applied — 10% off!"
+                        : ""
+                );
             } catch (err) {
                 if (!cancelled) {
                     setAppliedCoupon(false);
@@ -309,7 +316,18 @@ export default function Cart() {
 
     const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
     const productDiscount = Math.max(0, originalTotal - subtotal);
-    const couponDiscount = appliedCoupon ? Math.round(subtotal * 100 * 0.1) / 100 : 0;
+    const hasComboPack = items.some(
+        (item) =>
+            String(item.name || "")
+                .trim()
+                .toLowerCase() === "combo pack"
+    );
+
+    const canApplyCoupon = appliedCoupon && !hasComboPack;
+
+    const couponDiscount = canApplyCoupon
+        ? Math.round(subtotal * 100 * 0.1) / 100
+        : 0;
     const shipping = 0; // Free shipping on all orders
     const total = Math.max(0, subtotal - couponDiscount);
 
@@ -762,58 +780,63 @@ export default function Cart() {
                                 </div>
 
                                 <div className="space-y-4 px-6 py-6 sm:px-7">
-                                    <form
-                                        onSubmit={applyCoupon}
-                                        className="space-y-2"
-                                    >
-                                        <label
-                                            htmlFor="coupon"
-                                            className="block text-sm font-semibold text-gray-800"
-                                        >
-                                            Have a coupon?
-                                        </label>
-                                        <div className="flex gap-2">
-                                            <div className="relative min-w-0 flex-1">
-                                                <Tag
-                                                    size={17}
-                                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                                                />
-                                                <input
-                                                    id="coupon"
-                                                    value={coupon}
-                                                    onChange={(event) => {
-                                                        setCoupon(event.target.value);
-                                                        setCouponMessage("");
-                                                    }}
-                                                    placeholder="Enter code"
-                                                    disabled={appliedCoupon || couponLoading}
-                                                    className="h-12 w-full rounded-xl border border-gray-200 bg-white pl-10 pr-3 text-sm outline-none transition placeholder:text-gray-400 focus:border-[#7D45C2] focus:ring-2 focus:ring-[#7D45C2]/10 disabled:bg-gray-50"
-                                                />
-                                            </div>
-                                            <button
-                                                type="submit"
-                                                disabled={appliedCoupon || couponLoading}
-                                                className="rounded-xl border border-[#7D45C2] px-4 text-sm font-bold text-[#7D45C2] transition hover:bg-[#F1E8FA] disabled:opacity-50"
+                                    {!hasComboPack && (
+                                        <div>
+                                            {/* Your existing coupon input and Apply button */}
+                                            <form
+                                                onSubmit={applyCoupon}
+                                                className="space-y-2"
                                             >
-                                                Apply
-                                            </button>
+                                                <label
+                                                    htmlFor="coupon"
+                                                    className="block text-sm font-semibold text-gray-800"
+                                                >
+                                                    Have a coupon?
+                                                </label>
+                                                <div className="flex gap-2">
+                                                    <div className="relative min-w-0 flex-1">
+                                                        <Tag
+                                                            size={17}
+                                                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                                                        />
+                                                        <input
+                                                            id="coupon"
+                                                            value={coupon}
+                                                            onChange={(event) => {
+                                                                setCoupon(event.target.value);
+                                                                setCouponMessage("");
+                                                            }}
+                                                            placeholder="Enter code"
+                                                            disabled={appliedCoupon || couponLoading}
+                                                            className="h-12 w-full rounded-xl border border-gray-200 bg-white pl-10 pr-3 text-sm outline-none transition placeholder:text-gray-400 focus:border-[#7D45C2] focus:ring-2 focus:ring-[#7D45C2]/10 disabled:bg-gray-50"
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        type="submit"
+                                                        disabled={appliedCoupon || couponLoading}
+                                                        className="rounded-xl border border-[#7D45C2] px-4 text-sm font-bold text-[#7D45C2] transition hover:bg-[#F1E8FA] disabled:opacity-50"
+                                                    >
+                                                        Apply
+                                                    </button>
+                                                </div>
+                                                {couponMessage && (
+                                                    <p
+                                                        className={`text-xs ${appliedCoupon ? "text-emerald-600" : "text-red-500"
+                                                            }`}
+                                                    >
+                                                        {couponMessage}
+                                                    </p>
+                                                )}
+                                                {!appliedCoupon && (
+                                                    <p className="text-xs text-gray-400">
+                                                        WELCOME10 is automatically applied to eligible accounts
+                                                    </p>
+                                                )}
+                                            </form>
+                                            <div className="my-5 border-t border-dashed border-gray-200" />
                                         </div>
-                                        {couponMessage && (
-                                            <p
-                                                className={`text-xs ${appliedCoupon ? "text-emerald-600" : "text-red-500"
-                                                    }`}
-                                            >
-                                                {couponMessage}
-                                            </p>
-                                        )}
-                                        {!appliedCoupon && (
-                                            <p className="text-xs text-gray-400">
-                                                WELCOME10 is automatically applied to eligible accounts
-                                            </p>
-                                        )}
-                                    </form>
+                                    )}
 
-                                    <div className="my-5 border-t border-dashed border-gray-200" />
 
                                     <div className="space-y-4 text-sm">
                                         <div className="flex items-center justify-between gap-3">

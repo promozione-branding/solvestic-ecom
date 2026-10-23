@@ -104,11 +104,10 @@ export async function GET() {
             );
         }
 
-        // 4. Check previous successful purchase
-        // Razorpay: paid orders
-        // COD: confirmed/processing/shipped/delivered
-        const previousPurchase = await Order.exists({
+        // Check whether customer has already used WELCOME10
+        const couponAlreadyUsed = await Order.exists({
             userId: user._id,
+            couponCode: "WELCOME10",
             $or: [
                 {
                     paymentMethod: "razorpay",
@@ -135,7 +134,7 @@ export async function GET() {
             ],
         });
 
-        const eligible = !previousPurchase;
+        const eligible = !couponAlreadyUsed;
 
         return jsonResponse({
             success: true,
