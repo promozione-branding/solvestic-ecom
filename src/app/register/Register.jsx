@@ -87,7 +87,11 @@ export default function Register() {
 
       const response = await fetch("/api/user/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        cache: "no-store",
         body: JSON.stringify({
           name: form.name.trim(),
           mobile: `+91${form.mobile}`,
@@ -105,11 +109,8 @@ export default function Register() {
 
       // Update Redux authentication state.
       dispatch(setUser(data.user));
-
       setSuccess("Account created successfully! Redirecting...");
-
-      // Redirect directly to the account page.
-      router.replace("/account");
+      window.location.replace("/account");
     } catch (error) {
       console.error("Registration error:", error);
       setError("Unable to create your account. Please try again.");
