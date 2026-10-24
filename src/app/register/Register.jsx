@@ -43,6 +43,25 @@ export default function Register() {
     }));
   };
 
+  const handleMobileChange = (e) => {
+    let digits = e.target.value.replace(/\D/g, "");
+
+    // Handle pasted numbers with +91 or 91
+    if (digits.length > 10 && digits.startsWith("91")) {
+      digits = digits.slice(2);
+    }
+
+    // Handle pasted numbers with leading 0
+    if (digits.length === 11 && digits.startsWith("0")) {
+      digits = digits.slice(1);
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      mobile: digits.slice(0, 10),
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -58,6 +77,11 @@ export default function Register() {
       return;
     }
 
+    if (!/^[6-9]\d{9}$/.test(form.mobile)) {
+      setError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -66,7 +90,7 @@ export default function Register() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: form.name.trim(),
-          mobile: form.mobile.trim(),
+          mobile: `+91${form.mobile}`,
           email: form.email.trim().toLowerCase(),
           password: form.password,
         }),
@@ -194,15 +218,37 @@ export default function Register() {
                 </div>
 
                 <div>
-                  <label htmlFor="mobile" className="mb-2 block text-sm font-semibold text-[#30253D]">
+                  <label
+                    htmlFor="mobile"
+                    className="mb-2 block text-sm font-semibold text-[#30253D]"
+                  >
                     Mobile number
                   </label>
+
                   <div className="relative">
-                    <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input id="mobile" name="mobile" type="tel" autoComplete="tel" inputMode="tel" placeholder="+919876543210" value={form.mobile} onChange={update} required className={fieldClass} />
+                    <Phone
+                      size={18}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
+
+                    <input
+                      id="mobile"
+                      name="mobile"
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel-national"
+                      placeholder="9876543210"
+                      value={form.mobile}
+                      onChange={handleMobileChange}
+                      maxLength={13}
+                      pattern="[6-9][0-9]{9}"
+                      required
+                      className={fieldClass}
+                    />
                   </div>
+
                   <p className="mt-1.5 text-xs text-gray-400">
-                    Include your country code.
+                    Enter your 10-digit mobile number.
                   </p>
                 </div>
 
