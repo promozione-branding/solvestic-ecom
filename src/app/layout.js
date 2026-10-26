@@ -2,6 +2,7 @@
 import { Bebas_Neue, Inter, Geist } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+
 import SmoothScroll from "@/components/main/Smoothscroll";
 import Navbar from "@/components/main/Navbar";
 import Footer from "@/components/main/Footer";
@@ -9,6 +10,8 @@ import ReduxProvider from "./ReduxProvider";
 import { Toaster } from "react-hot-toast";
 
 const FACEBOOK_PIXEL_ID = "1427812482199666";
+const GA_MEASUREMENT_ID = "G-1YF72QB6ZD";
+const GTM_ID = "GTM-MG5FJN2G";
 
 const bebasNeue = Bebas_Neue({
   variable: "--font-bebas-neue",
@@ -39,10 +42,10 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${inter.variable}`}
+      className={`${bebasNeue.variable} ${geistSans.variable} ${inter.variable}`}
     >
       <head>
-        {/* Facebook Pixel */}
+        {/* ================= FACEBOOK PIXEL ================= */}
         <Script
           id="facebook-pixel"
           strategy="afterInteractive"
@@ -72,7 +75,72 @@ export default function RootLayout({ children }) {
           }}
         />
 
-        {/* Facebook Pixel NoScript */}
+        {/* ================= GOOGLE ANALYTICS GA4 ================= */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+
+              function gtag(){
+                dataLayer.push(arguments);
+              }
+
+              gtag('js', new Date());
+              gtag('config', '${GA_MEASUREMENT_ID}');
+            `,
+          }}
+        />
+
+        {/* ================= GOOGLE TAG MANAGER ================= */}
+        <Script
+          id="google-tag-manager"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(w,d,s,l,i){
+                w[l]=w[l]||[];
+                w[l].push({
+                  'gtm.start': new Date().getTime(),
+                  event:'gtm.js'
+                });
+
+                var f=d.getElementsByTagName(s)[0],
+                j=d.createElement(s),
+                dl=l!='dataLayer'?'&l='+l:'';
+
+                j.async=true;
+                j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+
+                f.parentNode.insertBefore(j,f);
+              })(window,document,'script','dataLayer','${GTM_ID}');
+            `,
+          }}
+        />
+      </head>
+
+      <body className="min-h-screen flex flex-col">
+        {/* ================= GTM NOSCRIPT ================= */}
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style={{
+              display: "none",
+              visibility: "hidden",
+            }}
+            title="Google Tag Manager"
+          />
+        </noscript>
+
+        {/* ================= FACEBOOK PIXEL NOSCRIPT ================= */}
         <noscript>
           <img
             height="1"
@@ -82,9 +150,7 @@ export default function RootLayout({ children }) {
             alt=""
           />
         </noscript>
-      </head>
 
-      <body className="min-h-screen flex flex-col">
         <ReduxProvider>
           <SmoothScroll>
             <Navbar />
