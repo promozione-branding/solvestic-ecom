@@ -201,7 +201,7 @@ export default function AddressManager({
         //     return;
         // }
 
-        if (!/^[6-9]\d{13}$/.test(digits)) {
+        if (!/^[6-9]\d{13}$/.test(form.mobile.trim())) {
             throw new Error(
                 "Please enter a valid mobile number."
             );
