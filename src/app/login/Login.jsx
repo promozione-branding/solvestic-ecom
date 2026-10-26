@@ -132,7 +132,7 @@ export default function Login() {
                 remember: form.remember,
             });
 
-            router.replace("/account");
+            router.replace("/cart");
             router.refresh();
         } catch (err) {
             setError(err.message || "Unable to sign in.");
@@ -159,7 +159,7 @@ export default function Login() {
 
             if (!/^[6-9]\d{9}$/.test(digits)) {
                 throw new Error(
-                    "Please enter a valid 10-digit Indian mobile number."
+                    "Please enter a valid 10-digit mobile number."
                 );
             }
 

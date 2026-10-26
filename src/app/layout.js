@@ -8,7 +8,7 @@ import Footer from "@/components/main/Footer";
 import ReduxProvider from "./ReduxProvider";
 import { Toaster } from "react-hot-toast";
 
-const FACEBOOK_PIXEL_ID = "28198039089828210";
+const FACEBOOK_PIXEL_ID = "1427812482199666";
 
 const bebasNeue = Bebas_Neue({
   variable: "--font-bebas-neue",

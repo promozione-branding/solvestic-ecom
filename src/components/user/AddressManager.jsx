@@ -196,9 +196,15 @@ export default function AddressManager({
         event.preventDefault();
         setError("");
 
-        if (!/^\d{10}$/.test(form.mobile.trim())) {
-            setError("Enter a valid 10-digit mobile number.");
-            return;
+        // if (!/^\d{10}$/.test(form.mobile.trim())) {
+        //     setError("Enter a valid 10-digit mobile number.");
+        //     return;
+        // }
+
+        if (!/^[6-9]\d{13}$/.test(digits)) {
+            throw new Error(
+                "Please enter a valid mobile number."
+            );
         }
 
         if (!/^\d{6}$/.test(form.pincode.trim())) {

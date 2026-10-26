@@ -110,7 +110,8 @@ export default function Register() {
       // Update Redux authentication state.
       dispatch(setUser(data.user));
       setSuccess("Account created successfully! Redirecting...");
-      window.location.replace("/account");
+      router.replace("/cart");
+      router.refresh();
     } catch (error) {
       console.error("Registration error:", error);
       setError("Unable to create your account. Please try again.");
