@@ -77,7 +77,7 @@ export default function AddressManager({
                 : {
                     ...initialAddress,
                     fullName: user?.name || "",
-                    mobile: user?.mobile || "",
+                    mobile: "",
                 }
         );
 
@@ -366,36 +366,41 @@ export default function AddressManager({
                                     )}
                                 </label>
 
+
                                 <input
                                     id={`address-${field.name}`}
                                     name={field.name}
                                     type={field.name === "mobile" ? "tel" : "text"}
-                                    value={form[field.name]}
-                                    onChange={field.name === "mobile" ? handleMobileChange : updateField}
-                                    required={field.required}
-                                    maxLength={field.name === "mobile" ? 13 : field.name === "pincode" ? 6 : undefined}
-                                    autoComplete={
-                                        field.name === "fullName"
-                                            ? "name"
-                                            : field.name === "mobile"
-                                                ? "tel"
-                                                : field.name === "addressLine1"
-                                                    ? "address-line1"
-                                                    : field.name === "addressLine2"
-                                                        ? "address-line2"
-                                                        : field.name === "city"
-                                                            ? "address-level2"
-                                                            : field.name === "state"
-                                                                ? "address-level1"
-                                                                : field.name === "pincode"
-                                                                    ? "postal-code"
-                                                                    : field.name === "country"
-                                                                        ? "country-name"
-                                                                        : "off"
+                                    inputMode={
+                                        ["mobile", "pincode"].includes(field.name)
+                                            ? "numeric"
+                                            : "text"
                                     }
-                                    placeholder={`Enter ${field.label.toLowerCase()}`}
+                                    maxLength={
+                                        field.name === "mobile"
+                                            ? 13
+                                            : field.name === "pincode"
+                                                ? 6
+                                                : undefined
+                                    }
+                                    value={form[field.name] ?? ""}
+                                    onChange={
+                                        field.name === "mobile"
+                                            ? handleMobileChange
+                                            : updateField
+                                    }
+                                    required={field.required}
+                                    autoComplete={
+                                        field.name === "mobile" ? "tel-national" : "on"
+                                    }
+                                    placeholder={
+                                        field.name === "mobile"
+                                            ? "Enter 10-digit mobile number"
+                                            : `Enter ${field.label.toLowerCase()}`
+                                    }
                                     className="w-full rounded-xl border border-[#EAE5EF] bg-white px-4 py-3 text-sm outline-none transition placeholder:text-[#AAA3B1] focus:border-[#7D45C2] focus:ring-4 focus:ring-[#7D45C2]/10"
                                 />
+
                             </div>
                         ))}
                     </div>

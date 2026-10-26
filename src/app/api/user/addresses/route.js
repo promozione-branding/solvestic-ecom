@@ -123,16 +123,6 @@ export async function POST(request) {
         // Validate mobile number
         address.mobile = String(address.mobile).trim();
 
-        if (!/^[0-9]{10}$/.test(address.mobile)) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Enter a valid 10-digit mobile number.",
-                },
-                { status: 400 }
-            );
-        }
-
         // Validate PIN code
         address.pincode = String(address.pincode).trim();
 
