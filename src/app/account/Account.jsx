@@ -213,6 +213,7 @@ export default function Account() {
 
         try {
             await axios.post("/api/user/logout", {}, { withCredentials: true });
+            window.dispatchEvent(new Event("solvestic-cart-updated"));
         } catch (error) {
             console.error("Logout error:", error);
         } finally {

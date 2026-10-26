@@ -19,8 +19,12 @@ import {
 } from "lucide-react";
 import { RecaptchaVerifier, signInWithPhoneNumber, } from "firebase/auth";
 import { firebaseAuth } from "@/lib/firebase";
+import { useDispatch } from "react-redux";
+import axios from "axios";
+import { setUser } from "@/redux/authSlice";
 
 export default function Login() {
+    const dispatch = useDispatch();
     const router = useRouter();
     const verifier = useRef(null);
     const confirmation = useRef(null);
@@ -131,9 +135,12 @@ export default function Login() {
                 password: form.password,
                 remember: form.remember,
             });
-
+            const { data } = await axios.get("/api/user/me");
+            const user = data.user ?? data.data?.user ?? data.data ?? null;
+            dispatch(setUser(user));
             router.replace("/cart");
             router.refresh();
+            window.dispatchEvent(new Event("solvestic-cart-updated"));
         } catch (err) {
             setError(err.message || "Unable to sign in.");
         } finally {
@@ -215,9 +222,12 @@ export default function Login() {
             const idToken = await credential.user.getIdToken();
 
             await request("/api/user/otp/verify", { idToken });
-
+            const { data } = await axios.get("/api/user/me");
+            const user = data.user ?? data.data?.user ?? data.data ?? null;
+            dispatch(setUser(user));
             router.replace("/cart");
             router.refresh();
+            window.dispatchEvent(new Event("solvestic-cart-updated"));
         } catch (err) {
             setError(
                 err.message?.includes("invalid-verification-code")

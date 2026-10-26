@@ -110,6 +110,7 @@ export default function Register() {
       // Update Redux authentication state.
       dispatch(setUser(data.user));
       setSuccess("Account created successfully! Redirecting...");
+      window.dispatchEvent(new Event("solvestic-cart-updated"));
       router.replace("/cart");
       router.refresh();
     } catch (error) {
