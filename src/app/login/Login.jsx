@@ -216,7 +216,7 @@ export default function Login() {
 
             await request("/api/user/otp/verify", { idToken });
 
-            router.replace("/account");
+            router.replace("/cart");
             router.refresh();
         } catch (err) {
             setError(

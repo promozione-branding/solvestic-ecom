@@ -192,41 +192,69 @@ export default function AddressManager({
         );
     };
 
+
+    const normalizeMobile = (value) => {
+        let digits = String(value || "").replace(/\D/g, "");
+
+        if (digits.length > 10 && digits.startsWith("91")) {
+            digits = digits.slice(2);
+        }
+
+        if (digits.length > 10 && digits.startsWith("0")) {
+            digits = digits.slice(1);
+        }
+
+        return digits.slice(0, 10);
+    };
+
+    const handleMobileChange = (e) => {
+        const mobile = normalizeMobile(e.target.value);
+
+        setForm((prev) => ({
+            ...prev,
+            mobile,
+        }));
+    };
+
     const saveAddress = async (event) => {
         event.preventDefault();
         setError("");
 
-        // if (!/^\d{10}$/.test(form.mobile.trim())) {
-        //     setError("Enter a valid 10-digit mobile number.");
-        //     return;
-        // }
+        const digits = normalizeMobile(form.mobile);
 
-        if (!/^[6-9]\d{13}$/.test(form.mobile.trim())) {
-            throw new Error(
-                "Please enter a valid mobile number."
-            );
-        }
-
-        if (!/^\d{6}$/.test(form.pincode.trim())) {
-            setError("Enter a valid 6-digit PIN code.");
+        if (!/^[6-9]\d{9}$/.test(digits)) {
+            setError("Please enter a valid 10-digit mobile number.");
             return;
         }
+
+        if (!/^\d{6}$/.test(String(form.pincode).trim())) {
+            setError("Please enter a valid 6-digit PIN code.");
+            return;
+        }
+
+        const payload = {
+            ...form,
+            mobile: `+91${digits}`,
+            pincode: String(form.pincode).trim(),
+        };
 
         try {
             setSaving(true);
 
             const response = editingAddress
                 ? await axios.patch("/api/user/addresses", {
-                    ...form,
+                    ...payload,
                     addressId: editingAddress._id,
                     action: "edit",
                 })
-                : await axios.post("/api/user/addresses", form);
+                : await axios.post("/api/user/addresses", payload);
 
             const data = response.data;
 
             if (!data.success || !data.address) {
-                throw new Error(data.message || "Unable to save this address.");
+                throw new Error(
+                    data.message || "Unable to save this address."
+                );
             }
 
             onSelect?.(data.address, data.addresses);
@@ -341,9 +369,11 @@ export default function AddressManager({
                                 <input
                                     id={`address-${field.name}`}
                                     name={field.name}
+                                    type={field.name === "mobile" ? "tel" : "text"}
                                     value={form[field.name]}
-                                    onChange={updateField}
+                                    onChange={field.name === "mobile" ? handleMobileChange : updateField}
                                     required={field.required}
+                                    maxLength={field.name === "mobile" ? 13 : field.name === "pincode" ? 6 : undefined}
                                     autoComplete={
                                         field.name === "fullName"
                                             ? "name"
